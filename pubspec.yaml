@@ -22,7 +22,7 @@ dev_dependencies:
 flutter_icons:
     android: true
     ios: true
-    image_path: "images/candidates.png"
+    image_path: "images/PlaceMe.png"
 
 flutter_test:
   sdk: flutter
@@ -40,4 +40,7 @@ flutter:
     - family: Satreva
       fonts:
         - asset: fonts/Satreva.ttf
+    - family: Source Sans 3
+      fonts:
+        - asset: fonts/SourceSans3-Regular.ttf
 

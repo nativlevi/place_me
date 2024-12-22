@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFb2c9ad),
+      backgroundColor: Color(0xFFa5bfcc),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -141,14 +141,29 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: () => navigateToUserGuide(context),
+                child: Container(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(
+                    Icons.help_outline,
+                    color: Colors.black,
+                    size: 24.0,
+                  ),
+                ),
+              ),
+            ),
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Welcome',style: TextStyle(color: Colors.white,fontSize: 100.0)),
-                  Text('To',style: TextStyle(color: Colors.white,fontSize: 75.0)),
-                  Text('PlaceMe',style: TextStyle(color: Colors.white,fontSize: 25.0,fontFamily:'Satreva.ttf')),
-                  SizedBox(height: 50.0),
+                  SizedBox(height: MediaQuery.of(context).padding.top), // רווח מעל התוכן
+                  Text('PlaceMe',style: TextStyle(color: Colors.white,fontSize: 100.0,fontFamily:'Satreva')),
+                  Text('Smart Seating, Perfect Placement',style: TextStyle(color: Colors.white,fontFamily: 'Source Sans 3',fontSize: 20.0)),
+                  SizedBox(height: 100.0),
                   GestureDetector(
                     onTap: () => navigateToManager(context),
                     child: buildCustomButton('Manager   '),
@@ -159,11 +174,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: buildCustomButton('Participant'),
                   ),
                   SizedBox(height: 10.0),
-                  SizedBox(height: 200.0),
-                  GestureDetector(
-                    onTap: () => navigateToUserGuide(context),
-                    child: buildCustomButton('User Guide'),
-                  ),
                 ],
               ),
             ),
