@@ -11,6 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  video_player: ^2.5.0
 
 
   cupertino_icons: ^1.0.8
@@ -36,4 +37,7 @@ flutter:
     - family: DanhDa
       fonts:
         - asset: fonts/DanhDa-Bold.otf
+    - family: Satreva
+      fonts:
+        - asset: fonts/Satreva.ttf
 

@@ -36,24 +36,15 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFb2c9ad),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-          Text(
-          'PlaceMe',
-          style: TextStyle(
-            fontFamily: 'DanhDa',
-            fontSize: 100,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-            SizedBox(height: 20),
             Image.asset(
-              'images/candidates.png',
-              width: 150,
-              height: 150,
+              'images/PlaceMe.png',
+              width: 400,
+              height: 400,
             ),
           ],
         ),
@@ -118,50 +109,86 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Login Page'),
-        centerTitle: true,
-        backgroundColor: Colors.teal,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: Stack(
           children: [
-            Text(
-              'Welcome to PlaceMe',
-              style: TextStyle(
-                fontSize: 24.0,
-                fontWeight: FontWeight.bold,
+            Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("images/first_screen.jpg"), // Path to your image
+                  fit: BoxFit.cover, // Adjusts the image to cover the screen
+                ),
+              ),
+              child: Container(
+                color: Colors.black.withAlpha(75),
               ),
             ),
-            SizedBox(height: 20.0),
-            ElevatedButton(
-              onPressed: () => navigateToManager(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: () => navigateToUserGuide(context),
+                child: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent, // Transparent background
+                  ),
+                  child: Icon(
+                    Icons.help_outline,
+                    color: Colors.white, // White icon color
+                    size: 24.0,
+                  ),
+                ),
               ),
-              child: Text('Manager'),
             ),
-            SizedBox(height: 10.0),
-            ElevatedButton(
-              onPressed: () => navigateToParticipant(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Welcome',style: TextStyle(color: Colors.white,fontSize: 100.0)),
+                  Text('To',style: TextStyle(color: Colors.white,fontSize: 75.0)),
+                  Text('PlaceMe',style: TextStyle(color: Colors.white,fontSize: 25.0,fontFamily:'Satreva.ttf')),
+                  SizedBox(height: 50.0),
+                  GestureDetector(
+                    onTap: () => navigateToManager(context),
+                    child: buildCustomButton('Manager   '),
+                  ),
+                  SizedBox(height: 10.0),
+                  GestureDetector(
+                    onTap: () => navigateToParticipant(context),
+                    child: buildCustomButton('Participant'),
+                  ),
+                  SizedBox(height: 10.0),
+                  SizedBox(height: 200.0),
+                  GestureDetector(
+                    onTap: () => navigateToUserGuide(context),
+                    child: buildCustomButton('User Guide'),
+                  ),
+                ],
               ),
-              child: Text('Participant'),
-            ),
-            SizedBox(height: 10.0),
-            ElevatedButton(
-              onPressed: () => navigateToUserGuide(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey,
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-              ),
-              child: Text('User Guide'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildCustomButton(String title) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+      decoration: BoxDecoration(
+        color: Colors.transparent, // Transparent background
+        border: Border.all(
+          color: Colors.white, // White border color
+          width: 1.5, // Border width
+        ),
+        borderRadius: BorderRadius.circular(10.0), // Rounded corners
+      ),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: Colors.white, // White text color
+          fontSize: 16,
         ),
       ),
     );
