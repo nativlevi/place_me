@@ -7,6 +7,8 @@ import 'manager_events_screen.dart';
 import 'participant_events_screen.dart';
 import 'guide_screen.dart';
 import 'splash_screen.dart';
+import 'manager_event_type_screen.dart';
+import 'manager_event_details_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -26,13 +28,14 @@ class MyApp extends StatelessWidget {
         '/participant_login': (context) => ParticipantLoginScreen(),
         '/manager_signup': (context) => ManagerRegisterScreen(),
         '/participant_signup': (context) => ParticipantSignupScreen(),
-        '/manager_dashboard': (context) => ManagerEventsScreen(),
+        '/manager_dashboard': (context) => ManagerEventTypeScreen(),
         '/participant_dashboard': (context) => ParticipantEventsScreen(),
+        '/manager_event_type_screen': (context) => ManagerEventTypeScreen(),
+        '/event_details': (context) => ManagerDetailsUpdateScreen(),
       },
     );
   }
 }
-
 
 class LoginScreen extends StatelessWidget {
   void navigateToManagerLogin(BuildContext context) {
