@@ -9,6 +9,8 @@ environment:
   sdk: ^3.6.0
 
 dependencies:
+  image_picker: ^0.8.7
+  file_picker: ^5.2.5
   flutter:
     sdk: flutter
   video_player: ^2.5.0
@@ -31,6 +33,7 @@ flutter_test:
 flutter_lints: ^5.0.0
 
 flutter:
+  uses-material-design: true
   assets:
     - images/
   fonts:
