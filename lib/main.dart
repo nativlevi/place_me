@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'loading.dart';
 import 'manager_login.dart';
 import 'manager_signup.dart';
 import 'participant_login.dart';
@@ -7,6 +8,9 @@ import 'manager_events_screen.dart';
 import 'participant_events_screen.dart';
 import 'guide_screen.dart';
 import 'splash_screen.dart';
+import 'participant_event_details.dart';
+import 'participant_final_screen.dart';
+import 'preferences_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -24,10 +28,13 @@ class MyApp extends StatelessWidget {
         '/guide': (context) => GuideScreen(),
         '/manager_login': (context) => ManagerLoginScreen(),
         '/participant_login': (context) => ParticipantLoginScreen(),
+        '/loading': (context) => LoadingScreen(),
         '/manager_signup': (context) => ManagerRegisterScreen(),
         '/participant_signup': (context) => ParticipantSignupScreen(),
         '/manager_dashboard': (context) => ManagerEventsScreen(),
         '/participant_dashboard': (context) => ParticipantEventsScreen(),
+        '/participant_events': (context) => ParticipantEventsScreen(),
+        '/seating_preferences': (context) => SeatingPreferencesScreen(eventType: 'Classroom/Workshop'),
       },
     );
   }
