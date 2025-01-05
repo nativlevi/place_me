@@ -14,6 +14,14 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
   bool allowNearbySelection = true;
   Map<String, bool> preferences = {};
 
+  // רשימות לשמירת השמות שהמשתמש מזין
+  final List<String> wantToSitNear = [];
+  final List<String> dontWantToSitNear = [];
+
+  // בקרי טקסט לשדות הקלט
+  final TextEditingController wantToSitNearController = TextEditingController();
+  final TextEditingController dontWantToSitNearController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -77,7 +85,7 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
             ),
             SizedBox(height: 20),
             CheckboxListTile(
-              title: Text('Allow others to choose to sit near me'),
+              title: Text('I give up my privacy and allow selection/de-selection of my name on the preferences screen for all participants.'),
               value: allowNearbySelection,
               onChanged: (value) {
                 setState(() {
@@ -85,6 +93,73 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
                 });
               },
             ),
+            SizedBox(height: 20),
+
+            // שדה להזנת שמות של אנשים שהמשתמש רוצה לשבת לידם
+            TextField(
+              controller: wantToSitNearController,
+              decoration: InputDecoration(
+                labelText: 'Enter name you want to sit near',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (value) {
+                if (value.isNotEmpty) {
+                  setState(() {
+                    wantToSitNear.add(value);
+                    wantToSitNearController.clear();
+                  });
+                }
+              },
+            ),
+            SizedBox(height: 10),
+            Wrap(
+              children: wantToSitNear
+                  .map((name) => Chip(
+                label: Text(name),
+                onDeleted: () {
+                  setState(() {
+                    wantToSitNear.remove(name);
+                  });
+                },
+              ))
+                  .toList(),
+            ),
+
+            SizedBox(height: 20),
+
+            // שדה להזנת שמות של אנשים שהמשתמש לא רוצה לשבת לידם
+            TextField(
+              controller: dontWantToSitNearController,
+              decoration: InputDecoration(
+                labelText: 'Enter name you don’t want to sit near',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (value) {
+                if (value.isNotEmpty) {
+                  setState(() {
+                    dontWantToSitNear.add(value);
+                    dontWantToSitNearController.clear();
+                  });
+                }
+              },
+            ),
+            SizedBox(height: 10),
+            Wrap(
+              children: dontWantToSitNear
+                  .map((name) => Chip(
+                label: Text(name),
+                onDeleted: () {
+                  setState(() {
+                    dontWantToSitNear.remove(name);
+                  });
+                },
+              ))
+                  .toList(),
+            ),
+
+            SizedBox(height: 20),
+
+            // רשימת העדפות
             Expanded(
               child: ListView(
                 children: preferences.keys.map((preference) {
