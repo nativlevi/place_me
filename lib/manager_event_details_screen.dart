@@ -81,6 +81,14 @@ class _ManagerDetailsUpdateScreenState
       appBar: AppBar(
         title: Text('Event Details'),
         backgroundColor: Colors.blueAccent,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.help_outline),
+            onPressed: () {
+              Navigator.pushNamed(context, '/guide'); // נווט למסך העזרה
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -180,6 +188,14 @@ class _ManagerDetailsUpdateScreenState
                       style: TextStyle(color: Colors.green),
                     ),
                   ),
+                SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/add_participant');
+                  },
+                  icon: Icon(Icons.person_add),
+                  label: Text('Add Participant Manually'),
+                ),
                 SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(

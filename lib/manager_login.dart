@@ -47,12 +47,12 @@ class ManagerLoginScreen extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () {
                     // ניווט למסך ההמתנה
-                    Navigator.pushNamed(context, '/loading');
+                    Navigator.pushNamed(context, '/manager_event_type_screen');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
-                    padding: EdgeInsets.symmetric(
-                        vertical: 15.0, horizontal: 40.0),
+                    padding:
+                        EdgeInsets.symmetric(vertical: 15.0, horizontal: 40.0),
                   ),
                   child: Padding(
                     padding: EdgeInsets.only(left: 100.0, right: 100.0),
