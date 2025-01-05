@@ -19,7 +19,7 @@ class ParticipantSignupScreen extends StatelessWidget {
                   height: 250,
                 ),
                 Text(
-                  'Registraion',
+                  'Registration',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -52,7 +52,8 @@ class ParticipantSignupScreen extends StatelessWidget {
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    // מעבר למסך ההמתנה
+                    Navigator.pushNamed(context, '/loading');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
@@ -60,7 +61,7 @@ class ParticipantSignupScreen extends StatelessWidget {
                         vertical: 15.0, horizontal: 40.0),
                   ),
                   child: Padding(
-                    padding: EdgeInsets.only(left: 97.0,right: 97.0),
+                    padding: EdgeInsets.only(left: 97.0, right: 97.0),
                     child: Text(
                       'Register',
                       style: TextStyle(
