@@ -4,7 +4,6 @@ import 'manager_login.dart';
 import 'manager_signup.dart';
 import 'manager_event_type_screen.dart';
 import 'manager_event_details_screen.dart';
-import 'manager_events_screen.dart';
 import 'participant_login.dart';
 import 'participant_signup.dart';
 import 'participant_events_screen.dart';
@@ -13,6 +12,7 @@ import 'participant_event_details.dart';
 import 'guide_screen.dart';
 import 'preferences_screen.dart';
 import 'splash_screen.dart';
+import 'add_participant_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -38,7 +38,9 @@ class MyApp extends StatelessWidget {
         '/manager_event_type_screen': (context) => ManagerEventTypeScreen(),
         '/event_details': (context) => ManagerDetailsUpdateScreen(),
         '/participant_events': (context) => ParticipantEventsScreen(),
-        '/seating_preferences': (context) => SeatingPreferencesScreen(eventType: 'Classroom/Workshop'),
+        '/seating_preferences': (context) =>
+            SeatingPreferencesScreen(eventType: 'Classroom/Workshop'),
+        '/add_participant': (context) => AddParticipantScreen(),
       },
     );
   }
