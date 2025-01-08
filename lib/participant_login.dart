@@ -1,12 +1,13 @@
-// participant_login.dart
 import 'package:flutter/material.dart';
 import 'package:place_me/participant_signup.dart';
+
+import 'loading.dart';
 
 class ParticipantLoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFefefef),
+      backgroundColor: Color(0xFFFD0DDD0),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -16,68 +17,107 @@ class ParticipantLoginScreen extends StatelessWidget {
               children: [
                 Image.asset(
                   'images/icon.png',
-                  width: 250,
                   height: 250,
                 ),
-                SizedBox(height: 20),
-                Text(
-                  'Participant Login',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                        "Don't have an account ? ",
+                        style: TextStyle(
+                          color: Color(0xFF727D73),
+                          fontFamily: 'Source Sans 3',
+                          fontSize: 15,
+                        )
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ParticipantSignupScreen()),
+                        );
+                      },
+                      child: Text(
+                        'SIGN UP',
+                        style: TextStyle(
+                          color: Color(0xFF727D73),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          fontFamily: 'Source Sans 3',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 10),
                 TextField(
                   decoration: InputDecoration(
-                    labelText: 'Phone Number',
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.phone, color: Color(0xFF3D3D3D),),
+                    hintText: 'PHONE NUMBER',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
                 SizedBox(height: 15),
+                // שדה סיסמה
                 TextField(
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock, color: Color(0xFF3D3D3D),),
+                    hintText: 'PASSWORD',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
+                    // נווט למסך שחזור סיסמה
+                  },
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        color: Color(0xFF727D73),
+                        fontFamily: 'Source Sans 3',
+                      ),
+                    ),
                   ),
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    // מעבר למסך ההמתנה
-                    Navigator.pushNamed(context, '/loading');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    padding: EdgeInsets.symmetric(
-                        vertical: 15.0, horizontal: 40.0),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 100.0, right: 100.0),
-                    child: Text(
-                      'Login',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 15),
-                TextButton(
-                  onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => ParticipantSignupScreen()),
+                        builder: (context) => LoadingScreen(routeName: '/participant_dashboard'),
+                      ),
                     );
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF3D3D3D),
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                  ),
                   child: Text(
-                    'Don\'t have an account? Register here.',
-                    style: TextStyle(color: Colors.blue),
+                    'SIGN IN',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],

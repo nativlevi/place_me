@@ -7,8 +7,6 @@ import 'manager_event_details_screen.dart';
 import 'participant_login.dart';
 import 'participant_signup.dart';
 import 'participant_events_screen.dart';
-import 'participant_final_screen.dart';
-import 'participant_event_details.dart';
 import 'guide_screen.dart';
 import 'preferences_screen.dart';
 import 'splash_screen.dart';
@@ -30,7 +28,7 @@ class MyApp extends StatelessWidget {
         '/guide': (context) => GuideScreen(),
         '/manager_login': (context) => ManagerLoginScreen(),
         '/participant_login': (context) => ParticipantLoginScreen(),
-        '/loading': (context) => LoadingScreen(),
+        '/loading': (context) => LoadingScreen(routeName: '',),
         '/manager_signup': (context) => ManagerRegisterScreen(),
         '/participant_signup': (context) => ParticipantSignupScreen(),
         '/manager_dashboard': (context) => ManagerEventTypeScreen(),
@@ -38,8 +36,7 @@ class MyApp extends StatelessWidget {
         '/manager_event_type_screen': (context) => ManagerEventTypeScreen(),
         '/event_details': (context) => ManagerDetailsUpdateScreen(),
         '/participant_events': (context) => ParticipantEventsScreen(),
-        '/seating_preferences': (context) =>
-            SeatingPreferencesScreen(eventType: 'Classroom/Workshop'),
+        '/seating_preferences': (context) => SeatingPreferencesScreen(eventType: 'Classroom/Workshop'),
         '/add_participant': (context) => AddParticipantScreen(),
       },
     );
@@ -93,22 +90,6 @@ class LoginScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Welcome',
-                    style: TextStyle(
-                      fontSize: 50.0,
-                      color: Colors.white,
-                      fontFamily: 'Source Sans 3',
-                    ),
-                  ),
-                  Text(
-                    'To',
-                    style: TextStyle(
-                      fontSize: 35.0,
-                      color: Colors.white,
-                      fontFamily: 'Source Sans 3',
-                    ),
-                  ),
-                  Text(
                     'PlaceMe',
                     style: TextStyle(
                       color: Colors.white,
@@ -125,11 +106,6 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 50.0),
-                  Text(
-                    'Continue as:',
-                    style: TextStyle(color: Colors.white, fontSize: 25.0),
-                  ),
-                  SizedBox(height: 15.0),
                   GestureDetector(
                     onTap: () => navigateToManagerLogin(context),
                     child: buildCustomButton('Manager   '),

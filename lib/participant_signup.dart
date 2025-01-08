@@ -1,11 +1,12 @@
-// participant_signup.dart
 import 'package:flutter/material.dart';
+
+import 'loading.dart';
 
 class ParticipantSignupScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFefefef),
+      backgroundColor: Color(0xFFFD0DDD0),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -15,60 +16,72 @@ class ParticipantSignupScreen extends StatelessWidget {
               children: [
                 Image.asset(
                   'images/icon.png',
-                  width: 250,
                   height: 250,
                 ),
-                Text(
-                  'Registration',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(height: 20),
                 TextField(
                   decoration: InputDecoration(
-                    labelText: 'Phone Number',
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.phone, color: Color(0xFF3D3D3D),),
+                    hintText: 'PHONE NUMBER',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 15),
+                // שדה סיסמה
+                TextField(
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                    hintText: 'PASSWORD',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
                 SizedBox(height: 15),
                 TextField(
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(height: 15),
-                TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Confirm Password',
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                    hintText: 'CONFIRM PASSWORD',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    // מעבר למסך ההמתנה
-                    Navigator.pushNamed(context, '/loading');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LoadingScreen(routeName: '/participant_dashboard'),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    padding: EdgeInsets.symmetric(
-                        vertical: 15.0, horizontal: 40.0),
+                    backgroundColor: Color(0xFF3D3D3D),
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 97.0, right: 97.0),
-                    child: Text(
-                      'Register',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  child: Text(
+                    'SIGN UP',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
