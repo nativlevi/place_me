@@ -1,8 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'manager_event_type_screen.dart'; // ייבוא של מסך ה-Manager Dashboard
 
-import 'loading.dart';
+class ManagerRegisterScreen extends StatefulWidget {
+  @override
+  _ManagerRegisterScreenState createState() => _ManagerRegisterScreenState();
+}
 
-class ManagerRegisterScreen extends StatelessWidget {
+class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
+  bool _isLoading = false; // משתנה שמגדיר אם אנחנו במצב טעינה
+
+  void _handleSignUp() {
+    setState(() {
+      _isLoading = true; // הצג את אנימציית הטעינה
+    });
+
+    // המתן 3 שניות לפני הניווט למסך הבא
+    Future.delayed(Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ManagerEventTypeScreen(),
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,13 +37,22 @@ class ManagerRegisterScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                Text(
+                  'Get started',
+                  style: TextStyle(
+                    color: Color(0xFF727D73),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 60,
+                    fontFamily: 'Satreva',
+                  ),
+                ),
                 Image.asset(
                   'images/icon.png',
                   height: 250,
                 ),
                 TextField(
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.person, color: Color(0xFF3D3D3D),),
+                    prefixIcon: Icon(Icons.person, color: Color(0xFF3D3D3D)),
                     hintText: 'EMAIL',
                     filled: true,
                     fillColor: Colors.white,
@@ -31,7 +63,6 @@ class ManagerRegisterScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 15),
-                // שדה סיסמה
                 TextField(
                   obscureText: true,
                   decoration: InputDecoration(
@@ -60,23 +91,26 @@ class ManagerRegisterScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 20),
+                // כפתור הרשמה
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => LoadingScreen(routeName: '/manager_dashboard'),
-                      ),
-                    );
-                  },
+                  onPressed: _isLoading ? null : _handleSignUp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF3D3D3D),
+                    disabledBackgroundColor: Color(0xFF3D3D3D), // שמירה על צבע קבוע גם במצב טעינה
                     padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
                   ),
-                  child: Text(
+                  child: _isLoading
+                      ? SizedBox(
+                    height: 50,
+                    width: 50,
+                    child: Lottie.network(
+                      'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
+                    ),
+                  )
+                      : Text(
                     'SIGN UP',
                     style: TextStyle(
                       color: Colors.white,
