@@ -1,9 +1,32 @@
 import 'package:flutter/material.dart';
-
-import 'loading.dart';
+import 'package:lottie/lottie.dart';
+import 'manager_event_type_screen.dart';
 import 'manager_signup.dart';
 
-class ManagerLoginScreen extends StatelessWidget {
+class ManagerLoginScreen extends StatefulWidget {
+  @override
+  _ManagerLoginScreenState createState() => _ManagerLoginScreenState();
+}
+
+class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
+  bool _isLoading = false;
+
+  void _handleLogin() {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // המתן 3 שניות לפני הניווט למסך הבא
+    Future.delayed(Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ManagerEventTypeScreen(),
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,6 +38,15 @@ class ManagerLoginScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              Text(
+                'Welcome back',
+                style: TextStyle(
+                  color: Color(0xFF727D73),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 60,
+                  fontFamily: 'Satreva',
+                ),
+              ),
               Image.asset(
                 'images/icon.png',
                 height: 250,
@@ -23,19 +55,20 @@ class ManagerLoginScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                      "Don't have an account ? ",
-                      style: TextStyle(
-                        color: Color(0xFF727D73),
-                        fontFamily: 'Source Sans 3',
-                        fontSize: 15,
-                      )
+                    "Don't have an account ? ",
+                    style: TextStyle(
+                      color: Color(0xFF727D73),
+                      fontFamily: 'Source Sans 3',
+                      fontSize: 15,
+                    ),
                   ),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ManagerRegisterScreen()),
+                          builder: (context) => ManagerRegisterScreen(),
+                        ),
                       );
                     },
                     child: Text(
@@ -53,7 +86,10 @@ class ManagerLoginScreen extends StatelessWidget {
               SizedBox(height: 10),
               TextField(
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.person, color: Color(0xFF3D3D3D),),
+                  prefixIcon: Icon(
+                    Icons.person,
+                    color: Color(0xFF3D3D3D),
+                  ),
                   hintText: 'EMAIL',
                   filled: true,
                   fillColor: Colors.white,
@@ -64,11 +100,13 @@ class ManagerLoginScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 15),
-              // שדה סיסמה
               TextField(
                 obscureText: true,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.lock, color: Color(0xFF3D3D3D),),
+                  prefixIcon: Icon(
+                    Icons.lock,
+                    color: Color(0xFF3D3D3D),
+                  ),
                   hintText: 'PASSWORD',
                   filled: true,
                   fillColor: Colors.white,
@@ -89,29 +127,33 @@ class ManagerLoginScreen extends StatelessWidget {
                     'Forgot Password?',
                     style: TextStyle(
                       color: Color(0xFF727D73),
-                        fontFamily: 'Source Sans 3',
+                      fontFamily: 'Source Sans 3',
                     ),
                   ),
                 ),
               ),
               SizedBox(height: 20),
+
+              // כפתור התחברות
               ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => LoadingScreen(routeName: '/manager_dashboard'),
-                    ),
-                  );
-                },
+                onPressed: _isLoading ? null : _handleLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF3D3D3D),
+                  disabledBackgroundColor: Color(0xFF3D3D3D), // שמירה על צבע קבוע גם כשהכפתור מושבת
                   padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.0),
                   ),
                 ),
-                child: Text(
+                child: _isLoading
+                    ? SizedBox(
+                  height: 50,
+                  width: 50,
+                  child: Lottie.network(
+                    'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
+                  ),
+                )
+                    : Text(
                   'SIGN IN',
                   style: TextStyle(
                     color: Colors.white,

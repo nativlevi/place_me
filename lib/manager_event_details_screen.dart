@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:image/image.dart' as img;
 
 class ManagerDetailsUpdateScreen extends StatefulWidget {
   @override
@@ -16,7 +18,7 @@ class _ManagerDetailsUpdateScreenState
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   String? eventType;
-  XFile? eventImage;
+  List<File> eventImages = [];
   FilePickerResult? participantFile;
 
   @override
@@ -28,40 +30,38 @@ class _ManagerDetailsUpdateScreenState
     }
   }
 
-  void selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        selectedDate = picked;
-      });
-    }
-  }
-
-  void selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        selectedTime = picked;
-      });
-    }
-  }
-
-  Future<void> pickEventImage() async {
+  Future<void> pickEventImages() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? pickedImage =
-        await picker.pickImage(source: ImageSource.gallery);
-    if (pickedImage != null) {
-      setState(() {
-        eventImage = pickedImage;
-      });
+    final List<XFile>? pickedImages = await picker.pickMultiImage();
+
+    if (pickedImages != null) {
+      for (var image in pickedImages) {
+        final file = File(image.path);
+        final processedImage = await enhanceImage(file);
+        setState(() {
+          eventImages.add(processedImage);
+        });
+      }
+    }
+  }
+
+  // פונקציה לשיפור תמונה
+  Future<File> enhanceImage(File imageFile) async {
+    final imageBytes = await imageFile.readAsBytes();
+    final decodedImage = img.decodeImage(imageBytes);
+
+    if (decodedImage != null) {
+      // שיפור התאורה
+      final brightenedImage = img.adjustColor(decodedImage, brightness: 0.1);
+      // הפחתת רעש
+      final denoisedImage = img.gaussianBlur(brightenedImage, 1);
+
+      // המרה חזרה לקובץ
+      final processedBytes = img.encodeJpg(denoisedImage);
+      final processedFile = await File(imageFile.path).writeAsBytes(processedBytes);
+      return processedFile;
+    } else {
+      return imageFile;
     }
   }
 
@@ -75,20 +75,18 @@ class _ManagerDetailsUpdateScreenState
     }
   }
 
+  void removeImage(int index) {
+    setState(() {
+      eventImages.removeAt(index);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Event Details'),
         backgroundColor: Colors.blueAccent,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.help_outline),
-            onPressed: () {
-              Navigator.pushNamed(context, '/guide'); // נווט למסך העזרה
-            },
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -158,19 +156,37 @@ class _ManagerDetailsUpdateScreenState
                 ),
                 SizedBox(height: 20),
                 ElevatedButton.icon(
-                  onPressed: pickEventImage,
+                  onPressed: pickEventImages,
                   icon: Icon(Icons.image),
-                  label: Text(eventImage == null
-                      ? 'Upload Event Image'
-                      : 'Image Selected'),
+                  label: Text(eventImages.isEmpty
+                      ? 'Upload Event Images'
+                      : 'Images Selected (${eventImages.length})'),
                 ),
-                if (eventImage != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Text(
-                      'Selected Image: ${eventImage!.name}',
-                      style: TextStyle(color: Colors.green),
-                    ),
+                SizedBox(height: 10),
+                if (eventImages.isNotEmpty)
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: eventImages.map((file) {
+                      return Stack(
+                        children: [
+                          Image.file(
+                            file,
+                            height: 100,
+                            width: 100,
+                            fit: BoxFit.cover,
+                          ),
+                          Positioned(
+                            top: 2,
+                            right: 2,
+                            child: GestureDetector(
+                              onTap: () => removeImage(eventImages.indexOf(file)),
+                              child: Icon(Icons.close, color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
                   ),
                 SizedBox(height: 20),
                 ElevatedButton.icon(
@@ -189,30 +205,10 @@ class _ManagerDetailsUpdateScreenState
                     ),
                   ),
                 SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/add_participant');
-                  },
-                  icon: Icon(Icons.person_add),
-                  label: Text('Add Participant Manually'),
-                ),
-                SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
                     onPressed: () {
-                      if (_formKey.currentState!.validate() &&
-                          selectedDate != null &&
-                          selectedTime != null) {
-                        // Save event details
-                        print('Event Type: $eventType');
-                        print('Event Name: ${nameController.text}');
-                        print('Location: ${locationController.text}');
-                        print('Date: ${selectedDate.toString()}');
-                        print('Time: ${selectedTime.toString()}');
-                        print('Image: ${eventImage?.path}');
-                        print('File: ${participantFile?.files.single.name}');
-
-                        // Navigate to dashboard or next step
+                      if (_formKey.currentState!.validate()) {
                         Navigator.pop(context);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -232,5 +228,31 @@ class _ManagerDetailsUpdateScreenState
         ),
       ),
     );
+  }
+
+  void selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedTime = picked;
+      });
+    }
+  }
+
+  void selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+      });
+    }
   }
 }
