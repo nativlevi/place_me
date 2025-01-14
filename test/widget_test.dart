@@ -1,27 +1,39 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:place_me/main.dart';
+import 'package:place_me/splash_screen.dart';
 
 void main() {
-  testWidgets('האפליקציה נטענת בהצלחה', (WidgetTester tester) async {
-    // טוען את האפליקציה ללא ניווט אוטומטי (כמו SplashScreen)
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Text('בדיקה פשוטה'),
-          ),
-        ),
-      ),
-    );
+  group('App Tests', () {
+    testWidgets('Splash Screen navigates to Login Screen',
+        (WidgetTester tester) async {
+      // Load the app
+      await tester.pumpWidget(MyApp());
 
-    // מוודא שהאפליקציה נטענת ומציגה את הטקסט
-    expect(find.text('בדיקה פשוטה'), findsOneWidget);
+      // Verify that the Splash Screen is displayed
+      expect(find.byType(SplashScreen), findsOneWidget);
+
+      // Wait for the navigation to complete (Splash Screen duration is 3 seconds)
+      await tester.pumpAndSettle(Duration(seconds: 3));
+
+      // Verify that the app navigated to the Login Screen
+      expect(find.byType(LoginScreen), findsOneWidget);
+    });
+
+    testWidgets('Login Screen has Manager and Participant buttons',
+        (WidgetTester tester) async {
+      // Load the Login Screen directly
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LoginScreen(),
+        ),
+      );
+
+      // Verify that the "Manager" button exists
+      expect(find.text('Manager   '), findsOneWidget);
+
+      // Verify that the "Participant" button exists
+      expect(find.text('Participant'), findsOneWidget);
+    });
   });
 }
