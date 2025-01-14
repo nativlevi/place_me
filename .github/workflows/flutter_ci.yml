@@ -1,0 +1,48 @@
+name: Flutter CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and Test Flutter App
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code from the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Setup Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # Run Flutter Linting
+      - name: Run Linter
+        run: flutter analyze
+
+      # Run Tests
+      - name: Run Tests
+        run: flutter test
+
+      # Build APK for Android
+      - name: Build APK
+        run: flutter build apk --debug
+
+      # Save APK as an artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
