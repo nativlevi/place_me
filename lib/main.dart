@@ -19,26 +19,28 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      initialRoute: '/splash',
-      routes: {
-        '/splash': (context) => SplashScreen(),
-        '/login': (context) => LoginScreen(),
-        '/guide': (context) => GuideScreen(),
-        '/manager_login': (context) => ManagerLoginScreen(),
-        '/participant_login': (context) => ParticipantLoginScreen(),
-        '/loading': (context) => LoadingScreen(routeName: '',),
-        '/manager_signup': (context) => ManagerRegisterScreen(),
-        '/participant_signup': (context) => ParticipantSignupScreen(),
-        '/manager_dashboard': (context) => ManagerEventTypeScreen(),
-        '/participant_dashboard': (context) => ParticipantEventsScreen(),
-        '/manager_event_type_screen': (context) => ManagerEventTypeScreen(),
-        '/event_details': (context) => ManagerDetailsUpdateScreen(),
-        '/participant_events': (context) => ParticipantEventsScreen(),
-        '/seating_preferences': (context) => SeatingPreferencesScreen(eventType: 'Classroom/Workshop'),
-        '/add_participant': (context) => AddParticipantScreen(),
-      },
+    return SafeArea(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        initialRoute: '/splash',
+        routes: {
+          '/splash': (context) => SplashScreen(),
+          '/login': (context) => LoginScreen(),
+          '/guide': (context) => GuideScreen(),
+          '/manager_login': (context) => ManagerLoginScreen(),
+          '/participant_login': (context) => ParticipantLoginScreen(),
+          '/loading': (context) => LoadingScreen(routeName: '',),
+          '/manager_signup': (context) => ManagerRegisterScreen(),
+          '/participant_signup': (context) => ParticipantSignupScreen(),
+          '/manager_dashboard': (context) => ManagerEventTypeScreen(),
+          '/participant_dashboard': (context) => ParticipantEventsScreen(),
+          '/manager_event_type_screen': (context) => ManagerEventTypeScreen(),
+          '/event_details': (context) => ManagerDetailsUpdateScreen(),
+          '/participant_events': (context) => ParticipantEventsScreen(),
+          '/seating_preferences': (context) => SeatingPreferencesScreen(eventType: 'Classroom/Workshop'),
+          '/add_participant': (context) => AddParticipantScreen(),
+        },
+      ),
     );
   }
 }
@@ -79,9 +81,9 @@ class LoginScreen extends StatelessWidget {
               child: GestureDetector(
                 onTap: () => navigateToUserGuide(context),
                 child: Icon(
-                  Icons.help_outline,
+                  Icons.live_help_outlined,
                   color: Colors.white,
-                  size: 24.0,
+                  size: 30.0,
                 ),
               ),
             ),

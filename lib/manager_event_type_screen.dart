@@ -4,25 +4,38 @@ class ManagerEventTypeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFefefef),
+      backgroundColor: Color(0xFFFD0DDD0), // צבע רקע ירוק בהיר
       appBar: AppBar(
-        title: Text('Select Event Type'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Select Event Type',
+          style: TextStyle(
+            fontFamily: 'Satreva',
+            fontSize: 40,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF727D73),
+          ),
+        ),
+        centerTitle: false,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // כותרת משנית
             Text(
               'Choose an Event Type',
               style: TextStyle(
+                fontFamily: 'Source Sans Pro',
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: Color(0xFF3D3D3D),
               ),
             ),
             SizedBox(height: 20),
+            // רשימת כרטיסים
             Expanded(
               child: ListView(
                 children: [
@@ -30,7 +43,7 @@ class ManagerEventTypeScreen extends StatelessWidget {
                     context,
                     title: 'Classroom/Workshop',
                     description: 'Setup seating for educational events.',
-                    iconPath: 'images/classroom_icon.jpg',
+                    iconPath: 'images/classroom.png',
                     onTap: () =>
                         navigateToNextScreen(context, 'Classroom/Workshop'),
                   ),
@@ -38,8 +51,8 @@ class ManagerEventTypeScreen extends StatelessWidget {
                     context,
                     title: 'Family/Social Event',
                     description:
-                        'Organize seating for family or social gatherings.',
-                    iconPath: 'images/social_event_icon.png',
+                    'Organize seating for family or social gatherings.',
+                    iconPath: 'images/family_Event.png',
                     onTap: () =>
                         navigateToNextScreen(context, 'Family/Social Event'),
                   ),
@@ -47,7 +60,7 @@ class ManagerEventTypeScreen extends StatelessWidget {
                     context,
                     title: 'Conference/Professional Event',
                     description: 'Plan seating for professional conferences.',
-                    iconPath: 'images/conference_icon.png',
+                    iconPath: 'images/Professional_Event.png',
                     onTap: () => navigateToNextScreen(
                         context, 'Conference/Professional'),
                   ),
@@ -61,41 +74,44 @@ class ManagerEventTypeScreen extends StatelessWidget {
   }
 
   Widget buildEventCard(
-    BuildContext context, {
-    required String title,
-    required String description,
-    required String iconPath,
-    required VoidCallback onTap,
-  }) {
+      BuildContext context, {
+        required String title,
+        required String description,
+        required String iconPath,
+        required VoidCallback onTap,
+      }) {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        elevation: 4,
+        color: Colors.grey[200], // צבע רקע לכרטיס
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(20.0),
         ),
         margin: EdgeInsets.symmetric(vertical: 10.0),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
+              // אייקון מותאם לכל כרטיס
               Image.asset(
                 iconPath,
                 width: 60,
                 height: 60,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
               ),
               SizedBox(width: 15),
-              Flexible(
+              // כותרת ותיאור הכרטיס
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
                       style: TextStyle(
+                        fontFamily: 'Source Sans Pro',
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: Color(0xFF3D3D3D),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -104,8 +120,9 @@ class ManagerEventTypeScreen extends StatelessWidget {
                     Text(
                       description,
                       style: TextStyle(
+                        fontFamily: 'Source Sans Pro',
                         fontSize: 14,
-                        color: Colors.black54,
+                        color: Color(0xFF727D73),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -113,7 +130,8 @@ class ManagerEventTypeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, color: Colors.black),
+              // חץ לעבור למסך הבא
+              Icon(Icons.arrow_forward_ios, color: Color(0xFF727D73)),
             ],
           ),
         ),
@@ -122,7 +140,10 @@ class ManagerEventTypeScreen extends StatelessWidget {
   }
 
   void navigateToNextScreen(BuildContext context, String eventType) {
-    Navigator.pushNamed(context, '/event_details',
-        arguments: {'eventType': eventType});
+    Navigator.pushNamed(
+      context,
+      '/event_details',
+      arguments: {'eventType': eventType},
+    );
   }
 }
