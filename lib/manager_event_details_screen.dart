@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
-import 'package:image/image.dart' as img;
 
 class ManagerDetailsUpdateScreen extends StatefulWidget {
   @override
@@ -15,10 +14,13 @@ class _ManagerDetailsUpdateScreenState
   final _formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
+  final TextEditingController participantNameController = TextEditingController();
+  final TextEditingController participantPhoneController = TextEditingController();
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   String? eventType;
   List<File> eventImages = [];
+  List<Map<String, String>> manualParticipants = [];
   FilePickerResult? participantFile;
 
   @override
@@ -35,33 +37,9 @@ class _ManagerDetailsUpdateScreenState
     final List<XFile>? pickedImages = await picker.pickMultiImage();
 
     if (pickedImages != null) {
-      for (var image in pickedImages) {
-        final file = File(image.path);
-        final processedImage = await enhanceImage(file);
-        setState(() {
-          eventImages.add(processedImage);
-        });
-      }
-    }
-  }
-
-  // פונקציה לשיפור תמונה
-  Future<File> enhanceImage(File imageFile) async {
-    final imageBytes = await imageFile.readAsBytes();
-    final decodedImage = img.decodeImage(imageBytes);
-
-    if (decodedImage != null) {
-      // שיפור התאורה
-      final brightenedImage = img.adjustColor(decodedImage, brightness: 0.1);
-      // הפחתת רעש
-      final denoisedImage = img.gaussianBlur(brightenedImage, 1);
-
-      // המרה חזרה לקובץ
-      final processedBytes = img.encodeJpg(denoisedImage);
-      final processedFile = await File(imageFile.path).writeAsBytes(processedBytes);
-      return processedFile;
-    } else {
-      return imageFile;
+      setState(() {
+        eventImages.addAll(pickedImages.map((image) => File(image.path)));
+      });
     }
   }
 
@@ -72,6 +50,10 @@ class _ManagerDetailsUpdateScreenState
       setState(() {
         participantFile = result;
       });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select a valid file (CSV or XLSX)')),
+      );
     }
   }
 
@@ -81,34 +63,73 @@ class _ManagerDetailsUpdateScreenState
     });
   }
 
+  void addManualParticipant() {
+    final participantName = participantNameController.text.trim();
+    final participantPhone = participantPhoneController.text.trim();
+
+    if (participantName.isNotEmpty && participantPhone.isNotEmpty) {
+      setState(() {
+        manualParticipants.add({'name': participantName, 'phone': participantPhone});
+        participantNameController.clear();
+        participantPhoneController.clear();
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter both name and phone number')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFFD0DDD0), // Light green background
       appBar: AppBar(
-        title: Text('Event Details'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Event Details',
+          style: TextStyle(
+            fontFamily: 'Satreva',
+            fontSize: 40,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF727D73),
+          ),
+        ),
+        centerTitle: false,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Event Type
                 Text(
                   'Event Type: $eventType',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontFamily: 'Source Sans Pro',
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFF3D3D3D),
                   ),
                 ),
                 SizedBox(height: 20),
+
+                // Event Name
                 TextFormField(
                   controller: nameController,
                   decoration: InputDecoration(
-                    labelText: 'Event Name',
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.event, color: Color(0xFF3D3D3D)),
+                    hintText: 'Enter Event Name',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -118,11 +139,20 @@ class _ManagerDetailsUpdateScreenState
                   },
                 ),
                 SizedBox(height: 20),
+
+                // Event Location
                 TextFormField(
                   controller: locationController,
                   decoration: InputDecoration(
-                    labelText: 'Location',
-                    border: OutlineInputBorder(),
+                    prefixIcon:
+                    Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
+                    hintText: 'Enter Location',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -132,35 +162,74 @@ class _ManagerDetailsUpdateScreenState
                   },
                 ),
                 SizedBox(height: 20),
+
+                // Select Date and Time
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () => selectDate(context),
-                        child: Text(selectedDate == null
-                            ? 'Select Date'
-                            : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF3D3D3D),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                          ),
+                        ),
+                        child: Text(
+                          selectedDate == null
+                              ? 'Select Date'
+                              : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                     SizedBox(width: 10),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () => selectTime(context),
-                        child: Text(selectedTime == null
-                            ? 'Select Time'
-                            : '${selectedTime!.hour}:${selectedTime!.minute.toString().padLeft(2, '0')}'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF3D3D3D),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                          ),
+                        ),
+                        child: Text(
+                          selectedTime == null
+                              ? 'Select Time'
+                              : '${selectedTime!.hour}:${selectedTime!.minute.toString().padLeft(2, '0')}',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                   ],
                 ),
                 SizedBox(height: 20),
+
+                // Upload Event Images
+                Text(
+                  'Upload clear and high-quality images in PNG, JPG, or JPEG format.',
+                  style: TextStyle(
+                    fontFamily: 'Source Sans Pro',
+                    fontSize: 16,
+                    color: Color(0xFF727D73),
+                  ),
+                ),
                 ElevatedButton.icon(
                   onPressed: pickEventImages,
-                  icon: Icon(Icons.image),
-                  label: Text(eventImages.isEmpty
-                      ? 'Upload Event Images'
-                      : 'Images Selected (${eventImages.length})'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF3D3D3D),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                  ),
+                  icon: Icon(Icons.image, color: Colors.white),
+                  label: Text(
+                    eventImages.isEmpty
+                        ? 'Upload Images'
+                        : 'Images Selected (${eventImages.length})',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
                 SizedBox(height: 10),
                 if (eventImages.isNotEmpty)
@@ -189,22 +258,123 @@ class _ManagerDetailsUpdateScreenState
                     }).toList(),
                   ),
                 SizedBox(height: 20),
+
+                // Upload Participant List
+                Text(
+                  'Upload a participant list in CSV or Excel format.',
+                  style: TextStyle(
+                    fontFamily: 'Source Sans Pro',
+                    fontSize: 16,
+                    color: Color(0xFF727D73),
+                  ),
+                ),
                 ElevatedButton.icon(
                   onPressed: pickParticipantFile,
-                  icon: Icon(Icons.upload_file),
-                  label: Text(participantFile == null
-                      ? 'Upload Participant List'
-                      : 'File Selected'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF3D3D3D),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                  ),
+                  icon: Icon(Icons.upload_file, color: Colors.white),
+                  label: Text(
+                    participantFile == null
+                        ? 'Upload Participant List'
+                        : 'File Selected',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
                 if (participantFile != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 10.0),
                     child: Text(
                       'Selected File: ${participantFile!.files.single.name}',
-                      style: TextStyle(color: Colors.green),
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontFamily: 'Source Sans Pro',
+                      ),
                     ),
                   ),
                 SizedBox(height: 20),
+
+                // Add Manual Participants
+                Text(
+                  'Add participants manually:',
+                  style: TextStyle(
+                    fontFamily: 'Source Sans Pro',
+                    fontSize: 16,
+                    color: Color(0xFF727D73),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: participantNameController,
+                        decoration: InputDecoration(
+                          prefixIcon:
+                          Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                          hintText: 'Name',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: participantPhoneController,
+                        decoration: InputDecoration(
+                          prefixIcon:
+                          Icon(Icons.phone, color: Color(0xFF3D3D3D)),
+                          hintText: 'Phone',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: addManualParticipant,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF3D3D3D),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                        ),
+                      ),
+                      child: Icon(Icons.add, color: Colors.white),
+                    ),
+                  ],
+                ),
+                if (manualParticipants.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: manualParticipants.map((participant) {
+                        return Text(
+                          '- ${participant['name']} (${participant['phone']})',
+                          style: TextStyle(
+                            fontFamily: 'Source Sans Pro',
+                            fontSize: 16,
+                            color: Color(0xFF3D3D3D),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                SizedBox(height: 20),
+
+                // Submit Button
                 Center(
                   child: ElevatedButton(
                     onPressed: () {
@@ -216,9 +386,21 @@ class _ManagerDetailsUpdateScreenState
                         );
                       }
                     },
-                    child: Text('Submit'),
+                    child: Text(
+                      'Submit',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
+                      backgroundColor: Color(0xFF3D3D3D),
+                      padding: EdgeInsets.symmetric(
+                          vertical: 15, horizontal: 100),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
                     ),
                   ),
                 ),
