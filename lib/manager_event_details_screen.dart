@@ -83,7 +83,7 @@ class _ManagerDetailsUpdateScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFD0DDD0), // Light green background
+      backgroundColor: Color(0xFFFD0DDD8), // Light green background
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
