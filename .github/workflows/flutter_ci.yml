@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - Sprint1-Neria
+      - sprint1-Nativ
   pull_request:
     branches:
       - main
