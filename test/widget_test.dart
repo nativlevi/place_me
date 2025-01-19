@@ -1,30 +1,39 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:place_me/main.dart';
+import 'package:place_me/splash_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('App Tests', () {
+    testWidgets('Splash Screen navigates to Login Screen',
+        (WidgetTester tester) async {
+      // Load the app
+      await tester.pumpWidget(MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      // Verify that the Splash Screen is displayed
+      expect(find.byType(SplashScreen), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+      // Wait for the navigation to complete (Splash Screen duration is 3 seconds)
+      await tester.pumpAndSettle(Duration(seconds: 3));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      // Verify that the app navigated to the Login Screen
+      expect(find.byType(LoginScreen), findsOneWidget);
+    });
+
+    testWidgets('Login Screen has Manager and Participant buttons',
+        (WidgetTester tester) async {
+      // Load the Login Screen directly
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LoginScreen(),
+        ),
+      );
+
+      // Verify that the "Manager" button exists
+      expect(find.text('Manager   '), findsOneWidget);
+
+      // Verify that the "Participant" button exists
+      expect(find.text('Participant'), findsOneWidget);
+    });
   });
 }
