@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:place_me/participant_events_screen.dart';
 import 'participant_signup.dart';
-import 'loading.dart';
 
 class ParticipantLoginScreen extends StatefulWidget {
   @override
