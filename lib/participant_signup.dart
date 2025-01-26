@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
-import 'package:place_me/participant_events_screen.dart';
+import 'participant_events_screen.dart';
 
 class ParticipantSignupScreen extends StatefulWidget {
   @override
@@ -8,36 +9,84 @@ class ParticipantSignupScreen extends StatefulWidget {
 }
 
 class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController otpController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+  String? _verificationId;
+  String? _errorMessage;
 
-  void _handleSignUp() {
+  Future<void> _sendOtp() async {
     setState(() {
       _isLoading = true;
     });
 
-    // המתן 3 שניות לפני הניווט למסך הבא
-    Future.delayed(Duration(seconds: 3), () {
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phoneController.text.trim(),
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        await FirebaseAuth.instance.signInWithCredential(credential);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ParticipantEventsScreen()),
+        );
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        setState(() {
+          _errorMessage = e.message;
+          _isLoading = false;
+        });
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        setState(() {
+          _verificationId = verificationId;
+          _isLoading = false;
+        });
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        _verificationId = verificationId;
+      },
+    );
+  }
+
+  Future<void> _verifyOtpAndSignUp() async {
+    if (_verificationId == null || otpController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter a valid OTP.';
+      });
+      return;
+    }
+
+    try {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId!,
+        smsCode: otpController.text.trim(),
+      );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => ParticipantEventsScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => ParticipantEventsScreen()),
       );
-    });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to verify OTP.';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFD0DDD0),
+      backgroundColor: const Color(0xFFFD0DDD0),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 20.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   'Get started',
                   style: TextStyle(
                     color: Color(0xFF727D73),
@@ -51,8 +100,9 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                   height: 250,
                 ),
                 TextField(
+                  controller: phoneController,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.phone, color: Color(0xFF3D3D3D)),
+                    prefixIcon: const Icon(Icons.phone, color: Color(0xFF3D3D3D)),
                     hintText: 'PHONE NUMBER',
                     filled: true,
                     fillColor: Colors.white,
@@ -62,43 +112,38 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 15),
-                // שדה סיסמה
-                TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock, color: Color(0xFF3D3D3D)),
-                    hintText: 'PASSWORD',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: BorderSide.none,
+                const SizedBox(height: 15),
+                if (_verificationId != null)
+                  TextField(
+                    controller: otpController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.sms, color: Color(0xFF3D3D3D)),
+                      hintText: 'ENTER OTP',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(height: 15),
-                TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock, color: Color(0xFF3D3D3D)),
-                    hintText: 'CONFIRM PASSWORD',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: BorderSide.none,
+                const SizedBox(height: 15),
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                     ),
                   ),
-                ),
-                SizedBox(height: 20),
-                // כפתור הרשמה
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _handleSignUp,
+                  onPressed: _isLoading
+                      ? null
+                      : (_verificationId == null ? _sendOtp : _verifyOtpAndSignUp),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF3D3D3D),
-                    disabledBackgroundColor: Color(0xFF3D3D3D), // שמירה על צבע קבוע גם במצב טעינה
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                    backgroundColor: const Color(0xFF3D3D3D),
+                    disabledBackgroundColor: const Color(0xFF3D3D3D),
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
@@ -112,8 +157,8 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                     ),
                   )
                       : Text(
-                    'SIGN UP',
-                    style: TextStyle(
+                    _verificationId == null ? 'SEND OTP' : 'VERIFY OTP',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
