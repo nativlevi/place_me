@@ -16,11 +16,15 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
   final TextEditingController confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
-
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   void _handleSignUp() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
@@ -32,28 +36,40 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
       final user = userCredential.user;
 
       if (user != null) {
+        await user.sendEmailVerification(); // שולח אימייל אימות למשתמש
+
         await FirebaseFirestore.instance.collection('managers').doc(user.uid).set({
           'uid': user.uid,
-          'name': nameController.text.trim(),
           'email': emailController.text.trim(),
           'createdAt': DateTime.now(),
-          'emailVerified': user.emailVerified,
+          'emailVerified': false,
         });
-        print("Data saved successfully!"); // בדיקה
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ManagerEventTypeScreen()),
+
+        // הודעה למשתמש
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Email Verification"),
+            content: const Text("A verification email has been sent. Please check your inbox."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
         );
       }
     } catch (e) {
-      print("Error: $e"); // הדפסה של שגיאות
+      setState(() {
+        _errorMessage = "Error: ${e.toString()}";
+      });
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -104,9 +120,11 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                     },
                   ),
                   const SizedBox(height: 15),
+
+                  // שדה הסיסמה עם אפשרות לראות/להסתיר אותה
                   TextFormField(
                     controller: passwordController,
-                    obscureText: true,
+                    obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
                       hintText: 'PASSWORD',
@@ -115,6 +133,17 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30.0),
                         borderSide: BorderSide.none,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: const Color(0xFF3D3D3D),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
                       ),
                     ),
                     validator: (value) {
@@ -131,9 +160,11 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                     },
                   ),
                   const SizedBox(height: 15),
+
+                  // שדה אישור סיסמה עם אפשרות לראות/להסתיר
                   TextFormField(
                     controller: confirmPasswordController,
-                    obscureText: true,
+                    obscureText: !_isConfirmPasswordVisible,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
                       hintText: 'CONFIRM PASSWORD',
@@ -142,6 +173,17 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30.0),
                         borderSide: BorderSide.none,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: const Color(0xFF3D3D3D),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                          });
+                        },
                       ),
                     ),
                     validator: (value) {
@@ -152,6 +194,7 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                     },
                   ),
                   const SizedBox(height: 20),
+
                   if (_errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -160,6 +203,7 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                         style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                       ),
                     ),
+
                   ElevatedButton(
                     onPressed: _isLoading ? null : _handleSignUp,
                     style: ElevatedButton.styleFrom(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
+import 'forgat_password.dart';
 import 'manager_event_type_screen.dart';
 import 'manager_signup.dart';
+
 
 class ManagerLoginScreen extends StatefulWidget {
   @override
@@ -59,7 +61,7 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFD0DDD0),
+      backgroundColor: Colors.grey[200],
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -70,10 +72,11 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
+                  const SizedBox(height: 20),
+                  Text(
                     'Welcome back',
                     style: TextStyle(
-                      color: Color(0xFF727D73),
+                      color: Colors.grey[700],
                       fontWeight: FontWeight.bold,
                       fontSize: 60,
                       fontFamily: 'Satreva',
@@ -81,15 +84,15 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                   ),
                   Image.asset(
                     'images/icon.png',
-                    height: 250,
+                    height: 230,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         "Don't have an account? ",
                         style: TextStyle(
-                          color: Color(0xFF727D73),
+                          color: Colors.grey[700],
                           fontFamily: 'Source Sans 3',
                           fontSize: 15,
                         ),
@@ -103,10 +106,10 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                             ),
                           );
                         },
-                        child: const Text(
+                        child: Text(
                           'SIGN UP',
                           style: TextStyle(
-                            color: Color(0xFF727D73),
+                            color: Colors.grey[700],
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                             fontFamily: 'Source Sans 3',
@@ -173,27 +176,31 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                   const SizedBox(height: 10),
                   GestureDetector(
                     onTap: () {
-                      // Navigate to reset password screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
+                      );
                     },
-                    child: const Align(
+                    child: Align(
                       alignment: Alignment.center,
                       child: Text(
                         'Forgot Password?',
                         style: TextStyle(
-                          color: Color(0xFF727D73),
+                          color: Colors.grey[700],
                           fontFamily: 'Source Sans 3',
                         ),
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 20),
                   if (_errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(
-                          color: Colors.red,
+                        style: TextStyle(
+                          color: Colors.red[800],
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -226,7 +233,50 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                       ),
                     ),
                   ),
-                ],
+                  const SizedBox(height: 25),
+        // or continue with
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 25.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Divider(
+                  thickness: 0.5,
+                  color: Colors.grey[400],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                child: Text(
+                  'Or continue with',
+                  style: TextStyle(color: Colors.grey[700],fontFamily: 'Source Sans 3'
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Divider(
+                  thickness: 0.5,
+                  color: Colors.grey[400],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 25),
+
+        // google + apple sign in buttons
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('images/google.png',height:35 ,),
+            const SizedBox(width: 25),
+            Image.asset('images/apple.png',height:35),
+            const SizedBox(width: 25),
+            Image.asset('images/facebook.png',height:35)
+          ],
+        ),
+        ]
               ),
             ),
           ),
