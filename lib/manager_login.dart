@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
+import 'forgat_password.dart';
 import 'manager_event_type_screen.dart';
 import 'manager_signup.dart';
+
 
 class ManagerLoginScreen extends StatefulWidget {
   @override
@@ -9,160 +12,273 @@ class ManagerLoginScreen extends StatefulWidget {
 }
 
 class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
   bool _isLoading = false;
+  String? _errorMessage;
+  bool _isPasswordVisible = false;
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
-    // המתן 3 שניות לפני הניווט למסך הבא
-    Future.delayed(Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ManagerEventTypeScreen(),
-        ),
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
-    });
+
+      if (!userCredential.user!.emailVerified) {
+        setState(() {
+          _errorMessage = 'Your email is not verified. Please verify your email.';
+        });
+        await FirebaseAuth.instance.signOut();
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ManagerEventTypeScreen(),
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = e.message;
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFD0DDD0),
+      backgroundColor: Colors.grey[200],
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                'Welcome back',
-                style: TextStyle(
-                  color: Color(0xFF727D73),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 60,
-                  fontFamily: 'Satreva',
-                ),
-              ),
-              Image.asset(
-                'images/icon.png',
-                height: 250,
-              ),
-              Row(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const SizedBox(height: 20),
                   Text(
-                    "Don't have an account ? ",
+                    'Welcome back',
                     style: TextStyle(
-                      color: Color(0xFF727D73),
-                      fontFamily: 'Source Sans 3',
-                      fontSize: 15,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 60,
+                      fontFamily: 'Satreva',
                     ),
                   ),
+                  Image.asset(
+                    'images/icon.png',
+                    height: 230,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontFamily: 'Source Sans 3',
+                          fontSize: 15,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ManagerRegisterScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'SIGN UP',
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            fontFamily: 'Source Sans 3',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                      hintText: 'EMAIL',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 15),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: !_isPasswordVisible,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                      hintText: 'PASSWORD',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                        borderSide: BorderSide.none,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: const Color(0xFF3D3D3D),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => ManagerRegisterScreen(),
-                        ),
+                        MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
                       );
                     },
-                    child: Text(
-                      'SIGN UP',
-                      style: TextStyle(
-                        color: Color(0xFF727D73),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        fontFamily: 'Source Sans 3',
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontFamily: 'Source Sans 3',
+                        ),
                       ),
                     ),
                   ),
-                ],
-              ),
-              SizedBox(height: 10),
-              TextField(
-                decoration: InputDecoration(
-                  prefixIcon: Icon(
-                    Icons.person,
-                    color: Color(0xFF3D3D3D),
-                  ),
-                  hintText: 'EMAIL',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 15),
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(
-                    Icons.lock,
-                    color: Color(0xFF3D3D3D),
-                  ),
-                  hintText: 'PASSWORD',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 10),
-              GestureDetector(
-                onTap: () {
-                  // נווט למסך שחזור סיסמה
-                },
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: Color(0xFF727D73),
-                      fontFamily: 'Source Sans 3',
+
+                  const SizedBox(height: 20),
+                  if (_errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(
+                          color: Colors.red[800],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _handleLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3D3D3D),
+                      disabledBackgroundColor: const Color(0xFF3D3D3D),
+                      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? SizedBox(
+                      height: 50,
+                      width: 50,
+                      child: Lottie.network(
+                        'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
+                      ),
+                    )
+                        : const Text(
+                      'SIGN IN',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 25),
+        // or continue with
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 25.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Divider(
+                  thickness: 0.5,
+                  color: Colors.grey[400],
                 ),
               ),
-              SizedBox(height: 20),
-
-              // כפתור התחברות
-              ElevatedButton(
-                onPressed: _isLoading ? null : _handleLogin,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF3D3D3D),
-                  disabledBackgroundColor: Color(0xFF3D3D3D), // שמירה על צבע קבוע גם כשהכפתור מושבת
-                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                child: Text(
+                  'Or continue with',
+                  style: TextStyle(color: Colors.grey[700],fontFamily: 'Source Sans 3'
                   ),
                 ),
-                child: _isLoading
-                    ? SizedBox(
-                  height: 50,
-                  width: 50,
-                  child: Lottie.network(
-                    'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
-                  ),
-                )
-                    : Text(
-                  'SIGN IN',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+              ),
+              Expanded(
+                child: Divider(
+                  thickness: 0.5,
+                  color: Colors.grey[400],
                 ),
               ),
             ],
+          ),
+        ),
+
+        const SizedBox(height: 25),
+
+        // google + apple sign in buttons
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('images/google.png',height:35 ,),
+            const SizedBox(width: 25),
+            Image.asset('images/apple.png',height:35),
+            const SizedBox(width: 25),
+            Image.asset('images/facebook.png',height:35)
+          ],
+        ),
+        ]
+              ),
+            ),
           ),
         ),
       ),
