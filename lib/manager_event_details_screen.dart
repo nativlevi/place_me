@@ -305,6 +305,7 @@ class _ManagerDetailsUpdateScreenState
                         color: Colors.green,
                         fontFamily: 'Source Sans Pro',
                       ),
+
                     ),
                   ),
                 SizedBox(height: 20),
@@ -382,9 +383,86 @@ class _ManagerDetailsUpdateScreenState
                           ),
                         );
                       }).toList(),
+
+
+
+                // Add Manual Participants
+                Text(
+                  'Add participants manually:',
+                  style: TextStyle(
+                    fontFamily: 'Source Sans Pro',
+                    fontSize: 16,
+                    color: Color(0xFF727D73),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: participantNameController,
+                        decoration: InputDecoration(
+                          prefixIcon:
+                          Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                          hintText: 'Name',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: participantPhoneController,
+                        decoration: InputDecoration(
+                          prefixIcon:
+                          Icon(Icons.phone, color: Color(0xFF3D3D3D)),
+                          hintText: 'Phone',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: addManualParticipant,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF3D3D3D),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                        ),
+                      ),
+                      child: Icon(Icons.add, color: Colors.white),
+                    ),
+                  ],
+                ),
+                if (manualParticipants.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: manualParticipants.map((participant) {
+                        return Text(
+                          '- ${participant['name']} (${participant['phone']})',
+                          style: TextStyle(
+                            fontFamily: 'Source Sans Pro',
+                            fontSize: 16,
+                            color: Color(0xFF3D3D3D),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 SizedBox(height: 20),
+
 
                 // Submit Button
                 Center(
