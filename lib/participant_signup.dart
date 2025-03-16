@@ -1,6 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
-import 'package:place_me/participant_events_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'participant_choose_password.dart';
 
 class ParticipantSignupScreen extends StatefulWidget {
   @override
@@ -8,36 +9,81 @@ class ParticipantSignupScreen extends StatefulWidget {
 }
 
 class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
+  final TextEditingController phoneController = TextEditingController();
   bool _isLoading = false;
+  String? _errorMessage;
 
-  void _handleSignUp() {
+
+  Future<void> _sendOtp() async {
+    String phoneNumber = phoneController.text.trim();
+
+    // בדיקה אם מספר הטלפון חוקי
+    if (!RegExp(r'^\+?\d{10,15}$').hasMatch(phoneNumber)) {
+      setState(() {
+        _errorMessage = 'Enter a valid phone number';
+      });
+      return;
+    }
+
+    if (!phoneNumber.startsWith('+')) {
+      phoneNumber = '+972${phoneNumber.substring(1)}'; // הוספת קידומת ישראל אם חסרה
+    }
+
     setState(() {
       _isLoading = true;
     });
 
-    // המתן 3 שניות לפני הניווט למסך הבא
-    Future.delayed(Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ParticipantEventsScreen(),
-        ),
-      );
-    });
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        await FirebaseAuth.instance.signInWithCredential(credential);
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        setState(() {
+          _errorMessage = e.message;
+          _isLoading = false;
+        });
+      },
+      codeSent: (String verificationId, int? resendToken) async {
+        setState(() {
+          _isLoading = false;
+        });
+
+        // ✅ שמירת מספר הטלפון ב-Firestore
+        await FirebaseFirestore.instance.collection("users").doc(phoneNumber).set({
+          "phone": phoneNumber,
+          "createdAt": FieldValue.serverTimestamp(), // מוסיף חותמת זמן
+          "otpSent": true // מציין שה-OTP נשלח
+        });
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChoosePasswordScreen(
+              verificationId: verificationId,
+              phoneNumber: phoneNumber,
+            ),
+          ),
+        );
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {},
+    );
   }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFD0DDD0),
+      backgroundColor: Colors.grey[200],
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 20.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   'Get started',
                   style: TextStyle(
                     color: Color(0xFF727D73),
@@ -51,8 +97,9 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                   height: 250,
                 ),
                 TextField(
+                  controller: phoneController,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.phone, color: Color(0xFF3D3D3D)),
+                    prefixIcon: const Icon(Icons.phone, color: Color(0xFF3D3D3D)),
                     hintText: 'PHONE NUMBER',
                     filled: true,
                     fillColor: Colors.white,
@@ -62,57 +109,28 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 15),
-                // שדה סיסמה
-                TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock, color: Color(0xFF3D3D3D)),
-                    hintText: 'PASSWORD',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: BorderSide.none,
+                const SizedBox(height: 15),
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                     ),
                   ),
-                ),
-                SizedBox(height: 15),
-                TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock, color: Color(0xFF3D3D3D)),
-                    hintText: 'CONFIRM PASSWORD',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-                // כפתור הרשמה
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _handleSignUp,
+                  onPressed: _isLoading ? null : _sendOtp,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF3D3D3D),
-                    disabledBackgroundColor: Color(0xFF3D3D3D), // שמירה על צבע קבוע גם במצב טעינה
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                    backgroundColor: const Color(0xFF3D3D3D),
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
                   ),
                   child: _isLoading
-                      ? SizedBox(
-                    height: 50,
-                    width: 50,
-                    child: Lottie.network(
-                      'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
-                    ),
-                  )
-                      : Text(
-                    'SIGN UP',
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                    'SEND OTP',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
