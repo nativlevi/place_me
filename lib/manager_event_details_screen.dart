@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ManagerDetailsUpdateScreen extends StatefulWidget {
   @override
@@ -30,6 +31,17 @@ class _ManagerDetailsUpdateScreenState
     if (args != null && args.containsKey('eventType')) {
       eventType = args['eventType'];
     }
+  }
+
+  Future<void> addAllowedUser(String phoneNumber) async {
+    if (!phoneNumber.startsWith('+')) {
+      phoneNumber = '+972${phoneNumber.substring(1)}'; // הפורמט הבינלאומי
+    }
+
+    await FirebaseFirestore.instance.collection("allowed_users").doc(phoneNumber).set({
+      "phone": phoneNumber,
+      "addedAt": FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> pickEventImages() async {

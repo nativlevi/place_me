@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "278306466027",
+    "project_id": "placeme-firebase",
+    "storage_bucket": "placeme-firebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:278306466027:android:7d479060435e76a9f376ae",
+        "android_client_info": {
+          "package_name": "com.example.place_me"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "278306466027-hhs7jeg6t1shor9947ur7pvhc0no1k2k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBT9k8ZKodceCNBJPPN6x8xuCtx_VTc0s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "278306466027-hhs7jeg6t1shor9947ur7pvhc0no1k2k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "278306466027-hdc3rob99cqlv9gv6ebennhlo6voskqs.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.placeMe"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

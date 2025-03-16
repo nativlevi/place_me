@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
-import 'package:place_me/participant_events_screen.dart';
+import 'participant_events_screen.dart';
 import 'participant_signup.dart';
 
 class ParticipantLoginScreen extends StatefulWidget {
@@ -9,39 +10,65 @@ class ParticipantLoginScreen extends StatefulWidget {
 }
 
 class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
   bool _isLoading = false;
+  String? _errorMessage;
+  bool _isPasswordVisible = false;
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
-    // המתן 3 שניות לפני הניווט למסך הבא
-    Future.delayed(Duration(seconds: 3), () {
+    try {
+      String phoneNumber = phoneController.text.trim();
+      if (!phoneNumber.startsWith('+')) {
+        phoneNumber = '+972${phoneNumber.substring(1)}';
+      }
+
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+        email: phoneNumber,
+        password: passwordController.text.trim(),
+      );
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => ParticipantEventsScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => ParticipantEventsScreen()),
       );
-    });
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = e.message;
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFD0DDD0),
+      backgroundColor: Colors.grey[200],
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 20.0),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Form(
+            key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                const SizedBox(height: 20),
                 Text(
                   'Welcome back',
                   style: TextStyle(
-                    color: Color(0xFF727D73),
+                    color: Colors.grey[700],
                     fontWeight: FontWeight.bold,
                     fontSize: 60,
                     fontFamily: 'Satreva',
@@ -55,9 +82,9 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account ? ",
+                      "First time here? ",
                       style: TextStyle(
-                        color: Color(0xFF727D73),
+                        color: Colors.grey[700],
                         fontFamily: 'Source Sans 3',
                         fontSize: 15,
                       ),
@@ -74,7 +101,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                       child: Text(
                         'SIGN UP',
                         style: TextStyle(
-                          color: Color(0xFF727D73),
+                          color: Colors.grey[700],
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                           fontFamily: 'Source Sans 3',
@@ -83,10 +110,11 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
-                TextField(
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: phoneController,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.phone, color: Color(0xFF3D3D3D)),
+                    prefixIcon: const Icon(Icons.phone, color: Color(0xFF3D3D3D)),
                     hintText: 'PHONE NUMBER',
                     filled: true,
                     fillColor: Colors.white,
@@ -95,12 +123,22 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                       borderSide: BorderSide.none,
                     ),
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your phone number';
+                    }
+                    if (!RegExp(r'^\+?\d{10,15}$').hasMatch(value)) {
+                      return 'Enter a valid phone number';
+                    }
+                    return null;
+                  },
                 ),
-                SizedBox(height: 15),
-                TextField(
-                  obscureText: true,
+                const SizedBox(height: 15),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: !_isPasswordVisible,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                    prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
                     hintText: 'PASSWORD',
                     filled: true,
                     fillColor: Colors.white,
@@ -108,9 +146,26 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                       borderRadius: BorderRadius.circular(30.0),
                       borderSide: BorderSide.none,
                     ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        color: const Color(0xFF3D3D3D),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                    ),
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  },
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
                     // נווט למסך שחזור סיסמה
@@ -120,20 +175,26 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                     child: Text(
                       'Forgot Password?',
                       style: TextStyle(
-                        color: Color(0xFF727D73),
+                        color: Colors.grey[700],
                         fontFamily: 'Source Sans 3',
                       ),
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
-                // כפתור התחברות
+                const SizedBox(height: 20),
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF3D3D3D),
-                    disabledBackgroundColor: Color(0xFF3D3D3D), // שמירה על צבע קבוע גם במצב טעינה
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                    backgroundColor: const Color(0xFF3D3D3D),
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
@@ -146,7 +207,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                       'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
                     ),
                   )
-                      : Text(
+                      : const Text(
                     'SIGN IN',
                     style: TextStyle(
                       color: Colors.white,
