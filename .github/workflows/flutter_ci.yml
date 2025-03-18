@@ -50,3 +50,4 @@ jobs:
         with:
           name: debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
+          continue-on-error: true
