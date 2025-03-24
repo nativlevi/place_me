@@ -34,9 +34,6 @@ jobs:
           flutter-version: '3.27.1'
           channel: 'stable'
 
-      # Accept Android Licenses
-      - name: Accept Android Licenses
-        run: yes | sdkmanager --licenses
 
       # Install SDK Platforms/Build-tools
       - name: Install Android SDK
