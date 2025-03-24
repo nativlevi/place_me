@@ -20,12 +20,28 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      # Setup Java
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
       # Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.27.1'
           channel: 'stable'
+
+      # Accept Android Licenses
+      - name: Accept Android Licenses
+        run: yes | sdkmanager --licenses
+
+      # Install SDK Platforms/Build-tools
+      - name: Install Android SDK
+        run: |
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
 
       # Install dependencies
       - name: Install Dependencies
