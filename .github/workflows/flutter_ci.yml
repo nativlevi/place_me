@@ -38,11 +38,6 @@ jobs:
       - name: Accept Android Licenses
         run: yes | sdkmanager --licenses
 
-      # Install SDK Platforms/Build-tools
-      - name: Install Android SDK
-        run: |
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
-
       # Install dependencies
       - name: Install Dependencies
         run: flutter pub get
