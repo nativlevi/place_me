@@ -1,4 +1,4 @@
-name: Test Minimal CI
+name: Flutter CICD
 
 on:
   push:
@@ -6,17 +6,63 @@ on:
       - main
       - Sprint1-Neria
       - sprint1-Nativ
-
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  test-minimal:
+  build:
+    name: Build and Test Flutter App
     runs-on: ubuntu-22.04
+
     steps:
-      - name: Checkout
+      # Checkout the code from the repository
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Upload Test
-        uses: actions/upload-artifact@v3
+      # Setup Java
+      - name: Setup Java
+        uses: actions/setup-java@v3
         with:
-          name: test
-          path: README.md
+          distribution: 'zulu'
+          java-version: '17'
+
+      # Setup Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.1'
+          channel: 'stable'
+
+      # Accept Android Licenses
+      - name: Accept Android Licenses
+        run: yes | sdkmanager --licenses
+
+      # Install SDK Platforms/Build-tools
+      - name: Install Android SDK
+        run: |
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # Run Flutter Linting
+      - name: Run Linter
+        run: |
+          flutter analyze || echo "Warnings found but ignored"
+
+      # Run Tests
+      - name: Run Tests
+        run: flutter test
+
+      # Build APK for Android
+      - name: Build APK
+        run: flutter build apk --debug
+
+      # Save APK as an artifact
+      #- name: Upload APK
+      # uses: actions/upload-artifact@v3
+      #  with:
+      #   name: debug-apk
+      #   path: build/app/outputs/flutter-apk/app-debug.apk
