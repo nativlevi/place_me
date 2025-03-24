@@ -1,4 +1,4 @@
-name: Flutter CI
+name: Flutter CICD
 
 on:
   push:
@@ -13,7 +13,7 @@ on:
 jobs:
   build:
     name: Build and Test Flutter App
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       # Checkout the code from the repository
@@ -46,8 +46,8 @@ jobs:
 
       # Save APK as an artifact
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.1
         with:
           name: debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
-          continue-on-error: true
+
