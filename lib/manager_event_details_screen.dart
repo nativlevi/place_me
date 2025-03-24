@@ -15,8 +15,10 @@ class _ManagerDetailsUpdateScreenState
   final _formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
-  final TextEditingController participantNameController = TextEditingController();
-  final TextEditingController participantPhoneController = TextEditingController();
+  final TextEditingController participantNameController =
+      TextEditingController();
+  final TextEditingController participantPhoneController =
+      TextEditingController();
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   String? eventType;
@@ -38,7 +40,10 @@ class _ManagerDetailsUpdateScreenState
       phoneNumber = '+972${phoneNumber.substring(1)}'; // הפורמט הבינלאומי
     }
 
-    await FirebaseFirestore.instance.collection("allowed_users").doc(phoneNumber).set({
+    await FirebaseFirestore.instance
+        .collection("allowed_users")
+        .doc(phoneNumber)
+        .set({
       "phone": phoneNumber,
       "addedAt": FieldValue.serverTimestamp(),
     });
@@ -81,7 +86,8 @@ class _ManagerDetailsUpdateScreenState
 
     if (participantName.isNotEmpty && participantPhone.isNotEmpty) {
       setState(() {
-        manualParticipants.add({'name': participantName, 'phone': participantPhone});
+        manualParticipants
+            .add({'name': participantName, 'phone': participantPhone});
         participantNameController.clear();
         participantPhoneController.clear();
       });
@@ -157,7 +163,7 @@ class _ManagerDetailsUpdateScreenState
                   controller: locationController,
                   decoration: InputDecoration(
                     prefixIcon:
-                    Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
+                        Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
                     hintText: 'Enter Location',
                     filled: true,
                     fillColor: Colors.white,
@@ -261,7 +267,8 @@ class _ManagerDetailsUpdateScreenState
                             top: 2,
                             right: 2,
                             child: GestureDetector(
-                              onTap: () => removeImage(eventImages.indexOf(file)),
+                              onTap: () =>
+                                  removeImage(eventImages.indexOf(file)),
                               child: Icon(Icons.close, color: Colors.red),
                             ),
                           ),
@@ -326,7 +333,7 @@ class _ManagerDetailsUpdateScreenState
                         controller: participantNameController,
                         decoration: InputDecoration(
                           prefixIcon:
-                          Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                              Icon(Icons.person, color: Color(0xFF3D3D3D)),
                           hintText: 'Name',
                           filled: true,
                           fillColor: Colors.white,
@@ -343,7 +350,7 @@ class _ManagerDetailsUpdateScreenState
                         controller: participantPhoneController,
                         decoration: InputDecoration(
                           prefixIcon:
-                          Icon(Icons.phone, color: Color(0xFF3D3D3D)),
+                              Icon(Icons.phone, color: Color(0xFF3D3D3D)),
                           hintText: 'Phone',
                           filled: true,
                           fillColor: Colors.white,
@@ -367,6 +374,83 @@ class _ManagerDetailsUpdateScreenState
                     ),
                   ],
                 ),
+                if (manualParticipants.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Column(
+                      children: [
+                        ...manualParticipants.map((participant) {
+                          return Text(
+                            '- ${participant['name']} (${participant['phone']})',
+                            style: TextStyle(
+                              fontFamily: 'Source Sans Pro',
+                              fontSize: 16,
+                              color: Color(0xFF3D3D3D),
+                            ),
+                          );
+                        }).toList(),
+
+                        // Add Manual Participants
+                        Text(
+                          'Add participants manually:',
+                          style: TextStyle(
+                            fontFamily: 'Source Sans Pro',
+                            fontSize: 16,
+                            color: Color(0xFF727D73),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: participantNameController,
+                                decoration: InputDecoration(
+                                  prefixIcon: Icon(Icons.person,
+                                      color: Color(0xFF3D3D3D)),
+                                  hintText: 'Name',
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: TextField(
+                                controller: participantPhoneController,
+                                decoration: InputDecoration(
+                                  prefixIcon: Icon(Icons.phone,
+                                      color: Color(0xFF3D3D3D)),
+                                  hintText: 'Phone',
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            ElevatedButton(
+                              onPressed: addManualParticipant,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFF3D3D3D),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30.0),
+                                ),
+                              ),
+                              child: Icon(Icons.add, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 if (manualParticipants.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 10.0),
@@ -408,8 +492,8 @@ class _ManagerDetailsUpdateScreenState
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF3D3D3D),
-                      padding: EdgeInsets.symmetric(
-                          vertical: 15, horizontal: 100),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 15, horizontal: 100),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30.0),
                       ),
