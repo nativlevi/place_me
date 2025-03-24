@@ -4,7 +4,10 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.google.gms:google-services:4.4.2' // ודא שזה כאן
+        // Android Gradle Plugin (AGP) version:
+        classpath 'com.android.tools.build:gradle:8.2.1'
+        // Google Services Plugin
+        classpath 'com.google.gms:google-services:4.3.15'
     }
 }
 
