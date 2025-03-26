@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class ManagerDetailsUpdateScreen extends StatefulWidget {
   @override
@@ -473,9 +474,9 @@ class _ManagerDetailsUpdateScreenState
                 // Submit Button
                 Center(
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        Navigator.pop(context);
+                        await saveEvent();
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Please fill all fields')),
@@ -532,5 +533,87 @@ class _ManagerDetailsUpdateScreenState
         selectedDate = picked;
       });
     }
+  }
+
+  Future<void> saveEvent() async {
+    // צור מסמך אירוע חדש ב-Firestore (אוטומטית יינתן מזהה eventId)
+    final docRef = FirebaseFirestore.instance.collection('events').doc();
+
+    // שמור תחילה את המידע הבסיסי (ללא התמונות/קבצים)
+    await docRef.set({
+      'eventType': eventType,
+      'eventName': nameController.text,
+      'location': locationController.text,
+      'date': selectedDate?.toIso8601String(),
+      'time': selectedTime != null
+          ? '${selectedTime!.hour}:${selectedTime!.minute}'
+          : null,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    // 1) העלאת תמונות ל-Firebase Storage
+    List<String> imageUrls = [];
+    for (var i = 0; i < eventImages.length; i++) {
+      final file = eventImages[i];
+      // צור שם ייחודי לקובץ
+      final fileName =
+          '${docRef.id}_$i${DateTime.now().millisecondsSinceEpoch}';
+      // צור נתיב ב-Storage, למשל: events/<eventId>/images/<fileName>
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('events/${docRef.id}/images/$fileName');
+
+      // העלה את הקובץ
+      await storageRef.putFile(file);
+      // קבל URL להורדה
+      final downloadURL = await storageRef.getDownloadURL();
+      imageUrls.add(downloadURL);
+    }
+
+    // 2) העלאת קובץ המשתתפים
+    String? participantFileUrl;
+    if (participantFile != null) {
+      final filePath = participantFile!.files.single.path;
+      if (filePath != null) {
+        final file = File(filePath);
+        final fileName = participantFile!.files.single.name;
+
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('events/${docRef.id}/participants/$fileName');
+
+        await storageRef.putFile(file);
+        participantFileUrl = await storageRef.getDownloadURL();
+      }
+    }
+
+    // 3) עדכן במסמך את ה-URLs
+    await docRef.update({
+      'imageUrls': imageUrls,
+      'participantFileUrl': participantFileUrl,
+    });
+
+    // 4) הוספת משתתפים ידניים לתת-אוסף (subcollection) "manualParticipants"
+    if (manualParticipants.isNotEmpty) {
+      for (var participant in manualParticipants) {
+        final name = participant['name'];
+        final phone = participant['phone'];
+        print('About to add participant: name=$name, phone=$phone');
+        await docRef.collection('manualParticipants').add({
+          'name': name,
+          'phone': phone,
+        });
+
+        print('Successfully added participant: $name');
+      }
+    } else {
+      print('No manual participants found');
+    }
+
+    // 5) הודעת הצלחה וחזרה
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Event saved successfully!')),
+    );
+    Navigator.pop(context);
   }
 }
