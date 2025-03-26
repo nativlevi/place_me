@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="facebook_app_id">1729294371305788</string>
+    <string name="facebook_client_token">c5eb6dc479369e9e4d1d6b8747113986</string>
+    <string name="fb_login_protocol_scheme">fb1729294371305788</string>
+    <string name="app_name">Place Me</string>
+</resources>
