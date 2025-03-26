@@ -1,4 +1,4 @@
-name: Flutter CI
+name: Flutter CICD
 
 on:
   push:
@@ -13,12 +13,19 @@ on:
 jobs:
   build:
     name: Build and Test Flutter App
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       # Checkout the code from the repository
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      # Setup Java
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
       # Setup Flutter
       - name: Setup Flutter
@@ -26,6 +33,7 @@ jobs:
         with:
           flutter-version: '3.27.1'
           channel: 'stable'
+
 
       # Install dependencies
       - name: Install Dependencies
@@ -45,9 +53,8 @@ jobs:
         run: flutter build apk --debug
 
       # Save APK as an artifact
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
-        with:
-          name: debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
-          continue-on-error: true
+      #- name: Upload APK
+      # uses: actions/upload-artifact@v3
+      #  with:
+      #   name: debug-apk
+      #   path: build/app/outputs/flutter-apk/app-debug.apk
