@@ -6,7 +6,8 @@ class ChoosePasswordScreen extends StatefulWidget {
   final String verificationId;
   final String phoneNumber;
 
-  const ChoosePasswordScreen({required this.verificationId, required this.phoneNumber, Key? key})
+  const ChoosePasswordScreen(
+      {required this.verificationId, required this.phoneNumber, Key? key})
       : super(key: key);
 
   @override
@@ -16,7 +17,8 @@ class ChoosePasswordScreen extends StatefulWidget {
 class _ChoosePasswordScreenState extends State<ChoosePasswordScreen> {
   final TextEditingController otpController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   String? _errorMessage;
   bool _isLoading = false;
 
@@ -46,7 +48,7 @@ class _ChoosePasswordScreenState extends State<ChoosePasswordScreen> {
       );
 
       UserCredential userCredential =
-      await FirebaseAuth.instance.signInWithCredential(credential);
+          await FirebaseAuth.instance.signInWithCredential(credential);
 
       await userCredential.user!.updatePassword(passwordController.text);
 
@@ -83,24 +85,11 @@ class _ChoosePasswordScreenState extends State<ChoosePasswordScreen> {
                 ),
                 const SizedBox(height: 20),
                 TextField(
-                  controller: otpController,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.sms, color: Color(0xFF3D3D3D)),
-                    hintText: 'הזן OTP',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
                   controller: passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                    prefixIcon:
+                        const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
                     hintText: 'סיסמה חדשה',
                     filled: true,
                     fillColor: Colors.white,
@@ -115,7 +104,8 @@ class _ChoosePasswordScreenState extends State<ChoosePasswordScreen> {
                   controller: confirmPasswordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                    prefixIcon:
+                        const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
                     hintText: 'אשר סיסמה',
                     filled: true,
                     fillColor: Colors.white,
@@ -130,7 +120,8 @@ class _ChoosePasswordScreenState extends State<ChoosePasswordScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 10.0),
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.red, fontWeight: FontWeight.bold),
                     ),
                   ),
                 const SizedBox(height: 20),
@@ -138,7 +129,8 @@ class _ChoosePasswordScreenState extends State<ChoosePasswordScreen> {
                   onPressed: _isLoading ? null : _verifyOtpAndSetPassword,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3D3D3D),
-                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 100),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
@@ -146,13 +138,13 @@ class _ChoosePasswordScreenState extends State<ChoosePasswordScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
-                    'אמת והגדר סיסמה',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                          'אמת והגדר סיסמה',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ],
             ),

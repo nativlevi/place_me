@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ManagerDetailsUpdateScreen extends StatefulWidget {
   @override
@@ -538,9 +539,16 @@ class _ManagerDetailsUpdateScreenState
   Future<void> saveEvent() async {
     // צור מסמך אירוע חדש ב-Firestore (אוטומטית יינתן מזהה eventId)
     final docRef = FirebaseFirestore.instance.collection('events').doc();
+    final managerId = FirebaseAuth.instance.currentUser?.uid;
+    if (managerId == null) {
+      // אם המנהל לא מחובר – אפשר להציג שגיאה או לעזוב
+      print('Manager not authenticated');
+      return;
+    }
 
     // שמור תחילה את המידע הבסיסי (ללא התמונות/קבצים)
     await docRef.set({
+      'managerId': managerId, // קישור למנהל שיצר את האירוע
       'eventType': eventType,
       'eventName': nameController.text,
       'location': locationController.text,
@@ -548,6 +556,7 @@ class _ManagerDetailsUpdateScreenState
       'time': selectedTime != null
           ? '${selectedTime!.hour}:${selectedTime!.minute}'
           : null,
+      'allowedParticipants': manualParticipants.map((p) => p['phone']).toList(),
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -610,7 +619,18 @@ class _ManagerDetailsUpdateScreenState
       print('No manual participants found');
     }
 
-    // 5) הודעת הצלחה וחזרה
+    // 5) הוספת הפניה לאירוע במסמך המנהל (תת-אוסף "events")
+    await FirebaseFirestore.instance
+        .collection('managers')
+        .doc(managerId)
+        .collection('events')
+        .doc(docRef.id)
+        .set({
+      'ref': docRef.id,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    // 6) הודעת הצלחה וחזרה
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Event saved successfully!')),
     );
