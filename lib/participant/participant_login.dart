@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
 import 'participant_events_screen.dart';
 import 'participant_signup.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'participant_forgot_password.dart';
+
 
 class ParticipantLoginScreen extends StatefulWidget {
   @override
@@ -31,34 +33,19 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
         phoneNumber = '+972${phoneNumber.substring(1)}';
       }
 
-      final docSnapshot = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(phoneNumber)
-          .get();
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+        email: phoneNumber,
+        password: passwordController.text.trim(),
+      );
 
-      if (!docSnapshot.exists) {
-        setState(() {
-          _errorMessage = "User not found. Please sign up first.";
-        });
-      } else {
-        final storedPassword = docSnapshot.data()?["Password"];
-        if (storedPassword == passwordController.text.trim()) {
-          // אם הסיסמה תואמת, מעבר למסך האירועים
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    ParticipantEventsScreen(phone: phoneNumber)),
-          );
-        } else {
-          setState(() {
-            _errorMessage = "Invalid password.";
-          });
-        }
-      }
-    } catch (e) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ParticipantEventsScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = e.message;
       });
     } finally {
       setState(() {
@@ -129,8 +116,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                 TextFormField(
                   controller: phoneController,
                   decoration: InputDecoration(
-                    prefixIcon:
-                        const Icon(Icons.phone, color: Color(0xFF3D3D3D)),
+                    prefixIcon: const Icon(Icons.phone, color: Color(0xFF3D3D3D)),
                     hintText: 'PHONE NUMBER',
                     filled: true,
                     fillColor: Colors.white,
@@ -154,8 +140,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                   controller: passwordController,
                   obscureText: !_isPasswordVisible,
                   decoration: InputDecoration(
-                    prefixIcon:
-                        const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                    prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
                     hintText: 'PASSWORD',
                     filled: true,
                     fillColor: Colors.white,
@@ -165,9 +150,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                         color: const Color(0xFF3D3D3D),
                       ),
                       onPressed: () {
@@ -187,7 +170,12 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                 const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
-                    // נווט למסך שחזור סיסמה
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ParticipantForgotPasswordScreen(),
+                      ),
+                    );
                   },
                   child: Align(
                     alignment: Alignment.center,
@@ -200,42 +188,41 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
                 if (_errorMessage != null)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10.0),
                     child: Text(
                       _errorMessage!,
-                      style: TextStyle(
-                          color: Colors.red, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3D3D3D),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 15, horizontal: 100),
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
                   ),
                   child: _isLoading
                       ? SizedBox(
-                          height: 50,
-                          width: 50,
-                          child: Lottie.network(
-                            'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
-                          ),
-                        )
+                    height: 50,
+                    width: 50,
+                    child: Lottie.network(
+                      'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
+                    ),
+                  )
                       : const Text(
-                          'SIGN IN',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                    'SIGN IN',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
