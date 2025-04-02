@@ -3,8 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
 import 'participant_events_screen.dart';
 import 'participant_signup.dart';
-import 'participant_forgot_password.dart';
-
 
 class ParticipantLoginScreen extends StatefulWidget {
   @override
@@ -170,12 +168,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                 const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ParticipantForgotPasswordScreen(),
-                      ),
-                    );
+                    // נווט למסך שחזור סיסמה
                   },
                   child: Align(
                     alignment: Alignment.center,
@@ -188,7 +181,6 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
                 if (_errorMessage != null)
                   Padding(

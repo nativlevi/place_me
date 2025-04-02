@@ -13,7 +13,8 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
   bool _isPasswordVisible = false;
@@ -28,7 +29,8 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
     });
 
     try {
-      final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
@@ -38,11 +40,15 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
       if (user != null) {
         await user.sendEmailVerification(); // שולח אימייל אימות למשתמש
 
-        await FirebaseFirestore.instance.collection('managers').doc(user.uid).set({
+        await FirebaseFirestore.instance
+            .collection('managers')
+            .doc(user.uid)
+            .set({
           'uid': user.uid,
           'email': emailController.text.trim(),
           'createdAt': DateTime.now(),
-          'emailVerified': false,
+          'password': passwordController.text.trim(),
+          'emailVerified': true,
         });
 
         // הודעה למשתמש
@@ -50,7 +56,8 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text("Email Verification"),
-            content: const Text("A verification email has been sent. Please check your inbox."),
+            content: const Text(
+                "A verification email has been sent. Please check your inbox."),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -100,7 +107,8 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                   TextFormField(
                     controller: emailController,
                     decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                      prefixIcon:
+                          const Icon(Icons.person, color: Color(0xFF3D3D3D)),
                       hintText: 'EMAIL',
                       filled: true,
                       fillColor: Colors.white,
@@ -126,7 +134,8 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                     controller: passwordController,
                     obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                      prefixIcon:
+                          const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
                       hintText: 'PASSWORD',
                       filled: true,
                       fillColor: Colors.white,
@@ -136,7 +145,9 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                           color: const Color(0xFF3D3D3D),
                         ),
                         onPressed: () {
@@ -166,7 +177,8 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                     controller: confirmPasswordController,
                     obscureText: !_isConfirmPasswordVisible,
                     decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                      prefixIcon:
+                          const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
                       hintText: 'CONFIRM PASSWORD',
                       filled: true,
                       fillColor: Colors.white,
@@ -176,12 +188,15 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          _isConfirmPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                           color: const Color(0xFF3D3D3D),
                         ),
                         onPressed: () {
                           setState(() {
-                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                            _isConfirmPasswordVisible =
+                                !_isConfirmPasswordVisible;
                           });
                         },
                       ),
@@ -200,7 +215,8 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            color: Colors.red, fontWeight: FontWeight.bold),
                       ),
                     ),
 
@@ -209,27 +225,28 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF3D3D3D),
                       disabledBackgroundColor: const Color(0xFF3D3D3D),
-                      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 15, horizontal: 100),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30.0),
                       ),
                     ),
                     child: _isLoading
                         ? SizedBox(
-                      height: 50,
-                      width: 50,
-                      child: Lottie.network(
-                        'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
-                      ),
-                    )
+                            height: 50,
+                            width: 50,
+                            child: Lottie.network(
+                              'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
+                            ),
+                          )
                         : const Text(
-                      'SIGN UP',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                            'SIGN UP',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ],
               ),
