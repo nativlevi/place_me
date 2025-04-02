@@ -53,48 +53,6 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
     });
   }
 
-  Future<void> _sendOtp() async {
-    String Password = passwordController.text.trim();
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await FirebaseAuth.instance.signInWithCredential(credential);
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        setState(() {
-          _errorMessage = e.message;
-          _isLoading = false;
-        });
-      },
-      codeSent: (String verificationId, int? resendToken) async {
-        setState(() {
-          _isLoading = false;
-        });
-
-        // ✅ שמירת מספר הטלפון ב-Firestore
-        await FirebaseFirestore.instance.collection("users").doc(Password).set({
-          "Password": Password,
-          "createdAt": FieldValue.serverTimestamp(), // מוסיף חותמת זמן
-        });
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChoosePasswordScreen(
-              verificationId: verificationId,
-              phoneNumber: Password,
-            ),
-          ),
-        );
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {},
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
