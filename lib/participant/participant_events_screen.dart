@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:place_me/preferences_screen.dart';
-import 'package:place_me/participant_final_screen.dart';
+import 'package:place_me/participant/preferences_screen.dart';
+import 'package:place_me/participant/participant_final_screen.dart';
 
 class ParticipantEventsScreen extends StatefulWidget {
   @override
