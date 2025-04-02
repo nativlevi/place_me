@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
-import 'forgot_password.dart';
+import 'ManagerForgotPasswordScreen.dart';
 import 'manager_event_type_screen.dart';
 import 'manager_signup.dart';
 import 'package:google_sign_in/google_sign_in.dart';
