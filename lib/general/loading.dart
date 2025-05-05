@@ -1,12 +1,11 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
 class LoadingScreen extends StatefulWidget {
   final String routeName;
 
-  // קבלת הנתיב כפרמטר
-  LoadingScreen({required this.routeName});
+  const LoadingScreen({Key? key, required this.routeName}) : super(key: key);
 
   @override
   _LoadingScreenState createState() => _LoadingScreenState();
@@ -16,9 +15,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void initState() {
     super.initState();
-
-    // ניווט לנתיב המתאים לאחר 4 שניות
-    Timer(Duration(seconds: 3), () {
+    // ניווט לנתיב הרצוי לאחר 3 שניות
+    Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacementNamed(context, widget.routeName);
     });
   }
