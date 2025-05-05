@@ -179,6 +179,7 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => SeatingPreferencesScreen(
+                                  eventId: event['id'],
                                   eventType: eventType,
                                 ),
                               ),
