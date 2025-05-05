@@ -9,7 +9,7 @@ class SeatingPreferencesScreen extends StatefulWidget {
   const SeatingPreferencesScreen({
     Key? key,
     required this.eventType,
-    required this.phone,
+    required this.phone, required eventId,
   }) : super(key: key);
 
   @override
