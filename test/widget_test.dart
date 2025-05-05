@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:place_me/main.dart';
-import 'package:place_me/splash_screen.dart';
+import 'package:place_me/general//main.dart';
+import 'package:place_me/general/splash_screen.dart';
 
 void main() {
   group('App Tests', () {
