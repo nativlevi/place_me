@@ -1,19 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.place_me">
 
+    <!-- הרשאות לגישה לאינטרנט ולקבצים -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <!-- WRITE_EXTERNAL_STORAGE רק עד Android 28 -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"/>
+
     <application
+        android:requestLegacyExternalStorage="true"
         android:label="place_me"
         android:icon="@mipmap/ic_launcher">
 
-        <!-- הגדרות Facebook – יש להגדיר אותן פעם אחת בלבד -->
-        <meta-data
-            android:name="com.facebook.sdk.ApplicationId"
-            android:value="@string/facebook_app_id" />
-        <meta-data
-            android:name="com.facebook.sdk.ClientToken"
-            android:value="@string/facebook_client_token" />
-
-        <!-- Flutter -->
+        <!-- Flutter embedding V2 -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
@@ -22,8 +23,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:taskAffinity=""
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/Theme.App.Transparent"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
@@ -36,7 +36,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Facebook Activities -->
+        <!-- (אופציונלי) אם אתה משתמש ב-Facebook SDK -->
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
@@ -51,15 +51,21 @@
                 <data android:scheme="@string/fb_login_protocol_scheme" />
             </intent-filter>
         </activity>
+
+        <!-- שימו לב: אין כאן יותר `<provider>` ידני -->
     </application>
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-
-    <!-- Required to query activities that can process text -->
+    <!-- מאפשר לחפש אפליקציות שמעבדות טקסט -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- מאפשר בחירת קבצים דרך Storage Access Framework -->
+        <intent>
+            <action android:name="android.intent.action.OPEN_DOCUMENT"/>
+            <category android:name="android.intent.category.OPENABLE"/>
+            <data android:mimeType="*/*"/>
         </intent>
     </queries>
 </manifest>

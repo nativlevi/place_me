@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:place_me/participant/preferences_screen.dart';
-import 'package:place_me/participant/participant_final_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'participant_final_screen.dart';
+import 'preferences_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class ParticipantEventsScreen extends StatefulWidget {
+  final String phone;
+
+  const ParticipantEventsScreen({
+    Key? key,
+    required this.phone,
+  }) : super(key: key);
+
   @override
   _ParticipantEventsScreenState createState() =>
       _ParticipantEventsScreenState();
@@ -11,71 +21,41 @@ class ParticipantEventsScreen extends StatefulWidget {
 class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
   int _selectedIndex = 0;
   String searchQuery = '';
+  String? participantPhone;
 
-  // רשימת אירועים מורחבת
-  final List<Map<String, String>> events = [
-    {
-      'title': 'Company Workshop',
-      'date': 'January 15, 2025',
-      'location': 'Room 101, Main Building',
-      'type': 'Classroom/Workshop',
-      'status': 'open',
-    },
-    {
-      'title': 'Team Meeting',
-      'date': 'January 20, 2025',
-      'location': 'Conference Room A',
-      'type': 'Conference/Professional Event',
-      'status': 'closed',
-    },
-    {
-      'title': 'Annual Gala',
-      'date': 'February 5, 2025',
-      'location': 'Grand Ballroom',
-      'type': 'Family/Social Event',
-      'status': 'open',
-    },
-    {
-      'title': 'Meeting',
-      'date': 'January 20, 2025',
-      'location': 'Conference Room A',
-      'type': 'Conference/Professional Event',
-      'status': 'open',
-    },
-  ];
-
-  // פונקציה להחזרת שם הקובץ של האייקון לפי סוג האירוע
-  String getIconForEventType(String type) {
-    switch (type) {
-      case 'Classroom/Workshop':
-        return 'images/classroom.png'; // אייקון לסדנה
-      case 'Family/Social Event':
-        return 'images/family_Event.png'; // אייקון לאירוע משפחתי
-      case 'Conference/Professional Event':
-        return 'images/Professional_Event.png'; // אייקון לכנס מקצועי
-      default:
-        return 'images/default_icon.png'; // אייקון ברירת מחדל
-    }
+  @override
+  void initState() {
+    super.initState();
+    final currentUser = FirebaseAuth.instance.currentUser;
+    // נניח שהמשתמש נרשם עם מספר טלפון, אז:
+    participantPhone = currentUser?.phoneNumber;
   }
 
-  List<Map<String, String>> getFilteredEvents(String status) {
-    return events
-        .where((event) =>
-    event['status'] == status &&
-        event['title']!.toLowerCase().contains(searchQuery.toLowerCase()))
-        .toList();
-  }
-
+  // מעבר בין לשוניות תחתית המסך (All/Open/Closed)
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
 
+  // פונקציה שמחזירה את שם האייקון לפי סוג האירוע
+  String getIconForEventType(String type) {
+    switch (type) {
+      case 'Classroom/Workshop':
+        return 'images/classroom.png';
+      case 'Family/Social Event':
+        return 'images/family_Event.png';
+      case 'Conference/Professional Event':
+        return 'images/Professional_Event.png';
+      default:
+        return 'images/default_icon.png';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFD0DDD0), // צבע רקע ירוק בהיר
+      backgroundColor: const Color(0xFFFD0DDD0), // רקע ירוק בהיר
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -88,9 +68,18 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
             color: Color(0xFF727D73),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout, color: Color(0xFF727D73)),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+          ),
+        ],
       ),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Column(
           children: [
             // שדה חיפוש
@@ -101,7 +90,7 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
                 });
               },
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.search, color: Color(0xFF3D3D3D)),
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF3D3D3D)),
                 hintText: 'Search all events',
                 filled: true,
                 fillColor: Colors.white,
@@ -111,112 +100,172 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 20),
-
-            // רשימת אירועים
+            const SizedBox(height: 20),
+            // כאן נשתמש ב-StreamBuilder כדי להאזין לשינויים באוסף האירועים
             Expanded(
-              child: ListView.builder(
-                itemCount: _selectedIndex == 0
-                    ? getFilteredEvents('open').length +
-                    getFilteredEvents('closed').length
-                    : getFilteredEvents(
-                    _selectedIndex == 1 ? 'open' : 'closed').length,
-                itemBuilder: (context, index) {
-                  var filteredEvents = _selectedIndex == 0
-                      ? getFilteredEvents('open') + getFilteredEvents('closed')
-                      : getFilteredEvents(
-                      _selectedIndex == 1 ? 'open' : 'closed');
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('events')
+                    .where('allowedParticipants', arrayContains: widget.phone)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text("Error: ${snapshot.error}"),
+                    );
+                  }
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                  return GestureDetector(
-                    onTap: () {
-                      if (filteredEvents[index]['status'] == 'closed') {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ParticipantFinalScreen(),
+                  // המרת המסמכים לרשימה
+                  final docs = snapshot.data!.docs;
+
+                  // המרה למבנה מפה
+                  final allEvents = docs.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    // נוסיף גם את ה-ID של המסמך (eventId) אם נרצה
+                    data['id'] = doc.id;
+                    return data;
+                  }).toList();
+
+                  // סינון לפי searchQuery
+                  final filteredBySearch = allEvents.where((event) {
+                    final title = (event['eventName'] ?? '').toString();
+                    return title
+                        .toLowerCase()
+                        .contains(searchQuery.toLowerCase());
+                  }).toList();
+
+                  // חלוקה לפי status = 'open' או 'closed'
+                  final openEvents = filteredBySearch
+                      .where((e) => (e['status'] ?? 'open') == 'open')
+                      .toList();
+                  final closedEvents = filteredBySearch
+                      .where((e) => (e['status'] ?? 'open') == 'closed')
+                      .toList();
+
+                  // לפי הלשונית הנוכחית (_selectedIndex)
+                  // 0 => All, 1 => Open, 2 => Closed
+                  List<Map<String, dynamic>> finalList;
+                  if (_selectedIndex == 0) {
+                    finalList = [...openEvents, ...closedEvents];
+                  } else if (_selectedIndex == 1) {
+                    finalList = openEvents;
+                  } else {
+                    finalList = closedEvents;
+                  }
+
+                  if (finalList.isEmpty) {
+                    return const Center(child: Text("No events found"));
+                  }
+
+                  return ListView.builder(
+                    itemCount: finalList.length,
+                    itemBuilder: (context, index) {
+                      final event = finalList[index];
+                      final eventName = event['eventName'] ?? 'Unnamed Event';
+                      String rawDateString = event['date'] ?? '';
+                      DateTime parsedDate = DateTime.parse(rawDateString);
+                      String formattedDate =
+                      DateFormat('MMM d, yyyy').format(parsedDate);
+                      final location = event['location'] ?? '';
+                      final eventType = event['eventType'] ?? '';
+                      final status = event['status'] ?? 'open';
+
+                      return GestureDetector(
+                        onTap: () {
+                          if (status == 'closed') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ParticipantFinalScreen(),
+                              ),
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SeatingPreferencesScreen(
+                                  eventType: eventType,
+                                  phone: widget.phone,      // <-- העברת ה-phone
+
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                        );
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SeatingPreferencesScreen(
-                              eventType: filteredEvents[index]['type']!,
-                            ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // הצגת האייקון
+                              Image.asset(
+                                getIconForEventType(eventType),
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.contain,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      eventName,
+                                      style: const TextStyle(
+                                        fontFamily: 'Source Sans Pro',
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF3D3D3D),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.calendar_today,
+                                            color: Color(0xFF727D73), size: 16),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          formattedDate,
+                                          style: const TextStyle(
+                                            fontFamily: 'Source Sans Pro',
+                                            fontSize: 16,
+                                            color: Color(0xFF727D73),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.location_on,
+                                            color: Color(0xFF727D73), size: 16),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          location,
+                                          style: const TextStyle(
+                                            fontFamily: 'Source Sans Pro',
+                                            fontSize: 16,
+                                            color: Color(0xFF727D73),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        );
-                      }
+                        ),
+                      );
                     },
-                    child: Container(
-                      margin: EdgeInsets.only(bottom: 20),
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // הצגת האייקון
-                          Image.asset(
-                            getIconForEventType(
-                                filteredEvents[index]['type']!),
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.contain,
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  filteredEvents[index]['title']!,
-                                  style: TextStyle(
-                                    fontFamily: 'Source Sans Pro',
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF3D3D3D),
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Icon(Icons.calendar_today,
-                                        color: Color(0xFF727D73), size: 16),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      filteredEvents[index]['date']!,
-                                      style: TextStyle(
-                                        fontFamily: 'Source Sans Pro',
-                                        fontSize: 16,
-                                        color: Color(0xFF727D73),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 5),
-                                Row(
-                                  children: [
-                                    Icon(Icons.location_on,
-                                        color: Color(0xFF727D73), size: 16),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      filteredEvents[index]['location']!,
-                                      style: TextStyle(
-                                        fontFamily: 'Source Sans Pro',
-                                        fontSize: 16,
-                                        color: Color(0xFF727D73),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   );
                 },
               ),
@@ -230,9 +279,9 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         backgroundColor: Colors.white,
-        selectedItemColor: Color(0xFF3D3D3D),
+        selectedItemColor: const Color(0xFF3D3D3D),
         unselectedItemColor: Colors.grey,
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'All Events',

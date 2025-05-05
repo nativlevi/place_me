@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
 
 class SeatingPreferencesScreen extends StatefulWidget {
   final String eventType;
+  final String phone;
 
-  SeatingPreferencesScreen({required this.eventType});
+  const SeatingPreferencesScreen({
+    Key? key,
+    required this.eventType,
+    required this.phone,
+  }) : super(key: key);
 
   @override
   _SeatingPreferencesScreenState createState() =>
@@ -12,19 +18,30 @@ class SeatingPreferencesScreen extends StatefulWidget {
 }
 
 class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
-  Map<String, bool> preferences = {};
-  String preferToSitWith = '';
-  String preferNotToSitWith = '';
+  // controllers לשני ה-TextFields
+  final TextEditingController _toController = TextEditingController();
+  final TextEditingController _notToController = TextEditingController();
+
+  late Map<String, bool> preferences;
+  bool showInLists = true;
   bool _isSaving = false;
-  bool showInLists = true; // משתנה לבחירה אם להופיע ברשימות
 
   @override
   void initState() {
     super.initState();
-    initializePreferences();
+    _initPreferencesKeys();
+    _loadPreferencesFromFirestore();
   }
 
-  void initializePreferences() {
+  @override
+  void dispose() {
+    _toController.dispose();
+    _notToController.dispose();
+    super.dispose();
+  }
+
+  /// בונה את המפת העדפות עם ברירות מחדל (false)
+  void _initPreferencesKeys() {
     switch (widget.eventType) {
       case 'Classroom/Workshop':
         preferences = {
@@ -49,207 +66,106 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
           'Charging Point': false,
         };
         break;
+      default:
+        preferences = {};
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Color(0xFFFD0DDD0),
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: Text(
-            'Choose Preferences',
-            style: TextStyle(
-              fontFamily: 'Satreva',
-              fontSize: 40,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF727D73),
+  /// טוען את העדפות המשתתף (אם כבר קיימות) ומעדכן את ה־UI
+  Future<void> _loadPreferencesFromFirestore() async {
+    final safeType = widget.eventType.replaceAll('/', '_');
+    final docRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.phone)
+        .collection('preferences')
+        .doc(safeType);
+
+    final snap = await docRef.get();
+    if (!snap.exists) return;
+
+    final data = snap.data()!;
+    setState(() {
+      // טקסטים
+      _toController.text = data['preferTo'] ?? '';
+      _notToController.text = data['preferNotTo'] ?? '';
+      // ויזיביליטי
+      showInLists = data['showInLists'] ?? true;
+      // מפת אפשרויות
+      final opts = (data['options'] as Map<String, dynamic>?) ?? {};
+      opts.forEach((key, val) {
+        if (preferences.containsKey(key)) {
+          preferences[key] = val as bool;
+        }
+      });
+    });
+  }
+
+  /// שומר חזרה את כל ההעדפות
+  Future<void> _savePreferences() async {
+    setState(() => _isSaving = true);
+
+    final safeType = widget.eventType.replaceAll('/', '_');
+    final docRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.phone)
+        .collection('preferences')
+        .doc(safeType);
+
+    final payload = {
+      'preferTo': _toController.text.trim(),
+      'preferNotTo': _notToController.text.trim(),
+      'showInLists': showInLists,
+      'options': preferences,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    try {
+      await docRef.set(payload);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preferences saved!')),
+      );
+      Navigator.pop(context); // חזרה למסך הקודם
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving preferences: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  /// בונה כרטיס Toggle עבור כל אפשרות
+  Widget _buildToggleCard(String title) {
+    final val = preferences[title]!;
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      color: Colors.grey[200],
+      child: Column(
+        children: [
+          ListTile(
+            leading: _getIconForPreference(title),
+            title: Text(
+              title,
+              style: const TextStyle(
+                fontFamily: 'Source Sans Pro',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            trailing: Switch(
+              value: val,
+              onChanged: (b) => setState(() => preferences[title] = b),
+              activeColor: const Color(0xFFF3B519),
             ),
           ),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: 20),
-                TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      preferToSitWith = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.person, color: Color(0xFF3D3D3D)),
-                    hintText: 'I want to sit next to:',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 15),
-                TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      preferNotToSitWith = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.person_off, color: Color(0xFF3D3D3D)),
-                    hintText: 'I don’t want to sit next to:',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-                // מתג לבחירה אם להופיע ברשימות
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  color: Colors.grey[200],
-                  child: ListTile(
-                    leading: Icon(
-                      showInLists ? Icons.visibility : Icons.visibility_off,
-                      color: Color(0xFF3D3D3D),
-                    ),
-                    title: Text(
-                      showInLists
-                          ? 'You are visible in the lists'
-                          : 'You are hidden from the lists',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF3D3D3D),
-                      ),
-                    ),
-                    trailing: Switch(
-                      value: showInLists,
-                      onChanged: (value) {
-                        setState(() {
-                          showInLists = value;
-                        });
-                      },
-                      activeColor: Color(0xFFF3B519),
-                      inactiveThumbColor: Colors.grey,
-                    ),
-                  ),
-                ),
-
-                // רשימת ההעדפות
-                Column(
-                  children: preferences.keys.map((preference) {
-                    bool isClose = preferences[preference] ?? false;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        color: Colors.grey[200],
-                        child: Column(
-                          children: [
-                            ListTile(
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16.0, vertical: 8.0),
-                              leading: _getIconForPreference(preference),
-                              title: Text(
-                                preference,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Source Sans Pro',
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              trailing: Switch(
-                                value: isClose,
-                                onChanged: (value) {
-                                  setState(() {
-                                    preferences[preference] = value;
-                                  });
-                                },
-                                activeColor: Color(0xFFF3B519),
-                                inactiveThumbColor: Colors.grey,
-                              ),
-                            ),
-                            // טקסט הסבר דינמי
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0, vertical: 8.0),
-                              child: Text(
-                                isClose
-                                    ? 'You prefer to be close to the $preference.'
-                                    : 'You prefer to be far from the $preference.',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                SizedBox(height: 20),
-                // כפתור שמירה
-                ElevatedButton(
-                  onPressed: _isSaving
-                      ? null
-                      : () {
-                    setState(() {
-                      _isSaving = true;
-                    });
-                    Future.delayed(Duration(seconds: 2), () {
-                      setState(() {
-                        _isSaving = false;
-                      });
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF3D3D3D),
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                    ),
-                  ),
-                  child: _isSaving
-                      ? SizedBox(
-                    height: 50,
-                    width: 50,
-                    child: Lottie.network(
-                      'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
-                    ),
-                  )
-                      : Text(
-                    'SAVE',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 20),
-              ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              val
+                  ? 'You prefer to be close to the $title.'
+                  : 'You prefer to be far from the $title.',
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -281,5 +197,130 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
       default:
         return Image.asset('icons/default_icon.png', width: 32, height: 32);
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFD0DDD0),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Choose Preferences',
+          style: TextStyle(
+            fontFamily: 'Satreva',
+            fontSize: 40,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF727D73),
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Column(
+          children: [
+            // שדה "I want to sit next to"
+            TextField(
+              controller: _toController,
+              decoration: InputDecoration(
+                prefixIcon:
+                const Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                hintText: 'I want to sit next to:',
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 15),
+
+            // שדה "I don’t want to sit next to"
+            TextField(
+              controller: _notToController,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.person_off,
+                    color: Color(0xFF3D3D3D)),
+                hintText: 'I don’t want to sit next to:',
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // כרטיס Visibility
+            Card(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              color: Colors.grey[200],
+              child: ListTile(
+                leading: Icon(
+                  showInLists ? Icons.visibility : Icons.visibility_off,
+                  color: const Color(0xFF3D3D3D),
+                ),
+                title: Text(
+                  showInLists
+                      ? 'You are visible in the lists'
+                      : 'You are hidden from the lists',
+                  style: const TextStyle(
+                    fontFamily: 'Source Sans Pro',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                trailing: Switch(
+                  value: showInLists,
+                  onChanged: (v) => setState(() => showInLists = v),
+                  activeColor: const Color(0xFFF3B519),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // רשימת ההעדפות
+            ...preferences.keys
+                .map((k) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: _buildToggleCard(k),
+            ))
+                .toList(),
+
+            const SizedBox(height: 20),
+
+            // כפתור שמירה
+            ElevatedButton(
+              onPressed: _isSaving ? null : _savePreferences,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3D3D3D),
+                padding: const EdgeInsets.symmetric(
+                    vertical: 15, horizontal: 100),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30)),
+              ),
+              child: _isSaving
+                  ? SizedBox(
+                height: 50,
+                width: 50,
+                child: Lottie.network(
+                  'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
+                ),
+              )
+                  : const Text(
+                'SAVE',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
