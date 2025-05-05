@@ -45,8 +45,8 @@ class MyApp extends StatelessWidget {
           '/manager_event_type_screen': (context) => ManagerEventTypeScreen(),
           '/event_details': (context) => ManagerDetailsUpdateScreen(),
           //'/participant_events': (context) => ParticipantEventsScreen(p),
-          '/seating_preferences': (context) =>
-              SeatingPreferencesScreen(eventType: 'Classroom/Workshop'),
+          '/seating_preferences': (context) => SeatingPreferencesScreen(
+              eventId: 'alkj23lk', eventType: 'Classroom/Workshop'),
           '/add_participant': (context) => AddParticipantScreen(),
         },
       ),
