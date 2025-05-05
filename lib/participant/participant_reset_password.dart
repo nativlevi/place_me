@@ -4,13 +4,18 @@ import 'package:firebase_auth/firebase_auth.dart';
 class ParticipantResetPasswordScreen extends StatefulWidget {
   final String verificationId;
   final String phoneNumber; // למקרה שתרצה להציג למשתמש את המספר
-  ParticipantResetPasswordScreen({required this.verificationId, required this.phoneNumber});
+  ParticipantResetPasswordScreen({
+    required this.verificationId,
+    required this.phoneNumber,
+  });
 
   @override
-  _ParticipantResetPasswordScreenState createState() => _ParticipantResetPasswordScreenState();
+  _ParticipantResetPasswordScreenState createState() =>
+      _ParticipantResetPasswordScreenState();
 }
 
-class _ParticipantResetPasswordScreenState extends State<ParticipantResetPasswordScreen> {
+class _ParticipantResetPasswordScreenState
+    extends State<ParticipantResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController codeController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
@@ -20,7 +25,6 @@ class _ParticipantResetPasswordScreenState extends State<ParticipantResetPasswor
 
   Future<void> _verifyCodeAndResetPassword() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() {
       _isLoading = true;
       _errorMessage = null;

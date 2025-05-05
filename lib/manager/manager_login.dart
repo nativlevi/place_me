@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
 import 'ManagerForgotPasswordScreen.dart';
 import 'manager_event_type_screen.dart';
+import 'manager_home_screen.dart';
 import 'manager_signup.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
@@ -35,7 +36,7 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
       // מעבר למסך הבא לאחר התחברות מוצלחת
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ManagerEventTypeScreen()),
+        MaterialPageRoute(builder: (context) => ManagerHomeScreen()),
       );
     } catch (e) {
       print('Error with Google Sign-In: $e');
@@ -58,7 +59,7 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
         // מעבר למסך הבא לאחר התחברות מוצלחת
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ManagerEventTypeScreen()),
+          MaterialPageRoute(builder: (context) => ManagerHomeScreen()),
         );
       } else {
         print('Facebook login failed: ${result.status}');
@@ -97,7 +98,7 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ManagerEventTypeScreen()),
+          MaterialPageRoute(builder: (context) => ManagerHomeScreen()),
         );
       }
     } on FirebaseAuthException catch (e) {
