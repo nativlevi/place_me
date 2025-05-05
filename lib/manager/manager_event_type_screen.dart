@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'manager_login.dart'; // ודא שהנתיב נכון למסך ההתחברות
 
 class ManagerEventTypeScreen extends StatelessWidget {
   @override
@@ -18,6 +20,19 @@ class ManagerEventTypeScreen extends StatelessWidget {
           ),
         ),
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout, color: Color(0xFF727D73)),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              // נווט חזרה למסך ההתחברות – ניתן לשנות לפי המבנה שלך
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ManagerLoginScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),

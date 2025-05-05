@@ -130,7 +130,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                   controller: phoneController,
                   decoration: InputDecoration(
                     prefixIcon:
-                        const Icon(Icons.phone, color: Color(0xFF3D3D3D)),
+                    const Icon(Icons.phone, color: Color(0xFF3D3D3D)),
                     hintText: 'PHONE NUMBER',
                     filled: true,
                     fillColor: Colors.white,
@@ -155,7 +155,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                   obscureText: !_isPasswordVisible,
                   decoration: InputDecoration(
                     prefixIcon:
-                        const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                    const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
                     hintText: 'PASSWORD',
                     filled: true,
                     fillColor: Colors.white,
@@ -222,20 +222,20 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                   ),
                   child: _isLoading
                       ? SizedBox(
-                          height: 50,
-                          width: 50,
-                          child: Lottie.network(
-                            'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
-                          ),
-                        )
+                    height: 50,
+                    width: 50,
+                    child: Lottie.network(
+                      'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
+                    ),
+                  )
                       : const Text(
-                          'SIGN IN',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                    'SIGN IN',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),

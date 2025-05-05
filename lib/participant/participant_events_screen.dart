@@ -68,6 +68,15 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
             color: Color(0xFF727D73),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout, color: Color(0xFF727D73)),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -92,7 +101,6 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
             // כאן נשתמש ב-StreamBuilder כדי להאזין לשינויים באוסף האירועים
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
@@ -160,7 +168,7 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
                       String rawDateString = event['date'] ?? '';
                       DateTime parsedDate = DateTime.parse(rawDateString);
                       String formattedDate =
-                          DateFormat('MMM d, yyyy').format(parsedDate);
+                      DateFormat('MMM d, yyyy').format(parsedDate);
                       final location = event['location'] ?? '';
                       final eventType = event['eventType'] ?? '';
                       final status = event['status'] ?? 'open';
@@ -181,6 +189,8 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
                                 builder: (context) => SeatingPreferencesScreen(
                                   eventId: event['id'],
                                   eventType: eventType,
+                                  phone: widget.phone,      // <-- העברת ה-phone
+
                                 ),
                               ),
                             );
