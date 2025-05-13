@@ -9,8 +9,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:charset_converter/charset_converter.dart';
-
 import '../general/guide_screen.dart';
+
 
 class ManagerDetailsUpdateScreen extends StatefulWidget {
   @override
@@ -92,8 +92,7 @@ class _ManagerDetailsUpdateScreenState
         type: FileType.custom,
         allowedExtensions: ['csv'],
       );
-      if (result != null &&
-          result.files.single.path != null) {
+      if (result != null && result.files.single.path != null) {
         setState(() => _csvResult = result);
         _parseCsv(result.files.single.path!);
       } else {
@@ -235,7 +234,7 @@ class _ManagerDetailsUpdateScreenState
         'location': _locationCtrl.text.trim(),
         'date': _selectedDate?.toIso8601String(),
         'time': _selectedTime != null
-            ? '${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2,'0')}'
+            ? '${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
             : null,
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -257,14 +256,34 @@ class _ManagerDetailsUpdateScreenState
       }
       await docRef.update({'imageUrls': imageUrls});
 
-      // 3) עיבוד CSV והוספת משתתפים
+
+      // 3) העלאת CSV
+      final csvPath = _csvResult?.files.single.path;
+      if (csvPath != null) {
+        final f = File(csvPath);
+        final ref = FirebaseStorage.instance
+            .ref('events/${docRef.id}/participants.csv');
+        try {
+          await ref.putFile(f);
+          final url = await ref.getDownloadURL();
+          await docRef.update({'participantFileUrl': url});
+          print('📑 Uploaded CSV: $url');
+        } catch (e) {
+          print('🔺 failed to upload CSV: $e');
+        }
+      }
+
+// 4) שמירת המשתתפים ושמירתם גם כ־allowed_users
       final allParticipants = [..._parsedCsv, ..._manualParticipants];
+
+
       for (var p in allParticipants) {
         await docRef.collection('participants').add(p);
         await _addAllowedUser(p['phone']!);
       }
 
-      // 4) קישור למנהל
+      // 5) קישור למנהל
+
       await FirebaseFirestore.instance
           .collection('managers')
           .doc(user.uid)
@@ -293,7 +312,11 @@ class _ManagerDetailsUpdateScreenState
   }
 
   Future<void> _addAllowedUser(String phone) async {
-    final normalized = phone.startsWith('+') ? phone : '+972${phone.substring(1)}';
+    // אם אין + ברישום – ננרמל ל־+972...
+    final normalized =
+        phone.startsWith('+') ? phone : '+972${phone.substring(1)}';
+
+
     await FirebaseFirestore.instance
         .collection('allowed_users')
         .doc(normalized)
@@ -355,7 +378,7 @@ class _ManagerDetailsUpdateScreenState
                     ),
                   ),
                   validator: (v) =>
-                  v == null || v.isEmpty ? 'נא למלא שם אירוע' : null,
+                      v == null || v.isEmpty ? 'נא למלא שם אירוע' : null,
                 ),
                 SizedBox(height: 20),
 
@@ -364,7 +387,7 @@ class _ManagerDetailsUpdateScreenState
                   controller: _locationCtrl,
                   decoration: InputDecoration(
                     prefixIcon:
-                    Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
+                        Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
                     hintText: 'Enter Location',
                     filled: true,
                     fillColor: Colors.white,
@@ -374,7 +397,7 @@ class _ManagerDetailsUpdateScreenState
                     ),
                   ),
                   validator: (v) =>
-                  v == null || v.isEmpty ? 'נא למלא מיקום' : null,
+                      v == null || v.isEmpty ? 'נא למלא מיקום' : null,
                 ),
                 SizedBox(height: 20),
 
@@ -411,7 +434,7 @@ class _ManagerDetailsUpdateScreenState
                         child: Text(
                           _selectedTime == null
                               ? 'Select Time'
-                              : '${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2,'0')}',
+                              : '${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -450,19 +473,22 @@ class _ManagerDetailsUpdateScreenState
                   Wrap(
                     spacing: 10,
                     runSpacing: 10,
-                    children: _eventImages.map((f) => Stack(
-                      children: [
-                        Image.file(f, width: 100, height: 100),
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: () => setState(() => _eventImages.remove(f)),
-                            child: Icon(Icons.close, color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    )).toList(),
+                    children: _eventImages
+                        .map((f) => Stack(
+                              children: [
+                                Image.file(f, width: 100, height: 100),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        setState(() => _eventImages.remove(f)),
+                                    child: Icon(Icons.close, color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            ))
+                        .toList(),
                   ),
                 ],
                 SizedBox(height: 20),
@@ -532,7 +558,7 @@ class _ManagerDetailsUpdateScreenState
                         controller: _participantNameCtrl,
                         decoration: InputDecoration(
                           prefixIcon:
-                          Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                              Icon(Icons.person, color: Color(0xFF3D3D3D)),
                           hintText: 'Name',
                           filled: true,
                           fillColor: Colors.white,
@@ -549,7 +575,7 @@ class _ManagerDetailsUpdateScreenState
                         controller: _participantPhoneCtrl,
                         decoration: InputDecoration(
                           prefixIcon:
-                          Icon(Icons.phone, color: Color(0xFF3D3D3D)),
+                              Icon(Icons.phone, color: Color(0xFF3D3D3D)),
                           hintText: 'Phone',
                           filled: true,
                           fillColor: Colors.white,
@@ -575,8 +601,8 @@ class _ManagerDetailsUpdateScreenState
                 ),
                 if (_manualParticipants.isNotEmpty) ...[
                   SizedBox(height: 8),
-                  ..._manualParticipants.map((p) =>
-                      Text('- ${p['name']} (${p['phone']})')),
+                  ..._manualParticipants
+                      .map((p) => Text('- ${p['name']} (${p['phone']})')),
                 ],
                 SizedBox(height: 20),
 
@@ -586,29 +612,29 @@ class _ManagerDetailsUpdateScreenState
                     onPressed: _isSaving
                         ? null
                         : () async {
-                      print('🔘 Submit pressed');
-                      await _saveEvent();
-                    },
+                            print('🔘 Submit pressed');
+                            await _saveEvent();
+                          },
                     child: _isSaving
                         ? SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : Text(
-                      'Submit',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                            'Submit',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF3D3D3D),
                       padding:
-                      EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                          EdgeInsets.symmetric(vertical: 15, horizontal: 100),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
