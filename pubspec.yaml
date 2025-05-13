@@ -23,6 +23,7 @@ dependencies:
   # File and image pickers
   image_picker: ^0.8.7
   intl: ^0.18.0
+  charset_converter: ^2.0.1
 
 
 

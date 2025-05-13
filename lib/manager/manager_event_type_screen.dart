@@ -76,8 +76,8 @@ class ManagerEventTypeScreen extends StatelessWidget {
                     title: 'Conference/Professional Event',
                     description: 'Plan seating for professional conferences.',
                     iconPath: 'images/Professional_Event.png',
-                    onTap: () => navigateToNextScreen(
-                        context, 'Conference/Professional'),
+                    onTap: () => navigateToNextScreen(context, 'Conference/Professional Event'),
+
                   ),
                 ],
               ),

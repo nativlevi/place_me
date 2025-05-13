@@ -8,7 +8,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
+import 'package:charset_converter/charset_converter.dart';
 
+import '../general/guide_screen.dart';
 
 class ManagerDetailsUpdateScreen extends StatefulWidget {
   @override
@@ -108,33 +110,95 @@ class _ManagerDetailsUpdateScreenState
 
   void _parseCsv(String path) async {
     try {
-      // 1) קרא את כל הבייטים של הקובץ
       final bytes = await File(path).readAsBytes();
-      // 2) dekode ל־UTF8
-      final content = utf8.decode(bytes);
-      // 3) פצל לשורות ופרש
-      final lines = content.split(RegExp(r'\r?\n'));
+      String content;
+
+      // נסה קודם לקרוא כ-UTF-8
+      try {
+        content = utf8.decode(bytes);
+      } catch (e) {
+        print('⚠️ UTF-8 decoding failed, fallback to windows-1255');
+        content = await CharsetConverter.decode("windows-1255", bytes);
+      }
+
+      print('📄 Raw CSV Content:\n$content');
+
+      final lines = content.split(RegExp(r'\r?\n')).where((line) => line.trim().isNotEmpty).toList();
       if (lines.length < 2) return;
-      final header = lines.first.split(',');
+
+      String headerLine = lines.first;
+      if (headerLine.startsWith('\uFEFF')) {
+        headerLine = headerLine.substring(1); // הסרת BOM
+      }
+
+      final header = headerLine.split(',');
+      print('🧩 Header columns: $header');
+
       final nameIdx = header.indexOf('name');
       final phoneIdx = header.indexOf('phone');
+      if (nameIdx == -1 || phoneIdx == -1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('העמודות name ו־phone לא נמצאו בקובץ')),
+        );
+        return;
+      }
+
       final tmp = <Map<String, String>>[];
       for (var i = 1; i < lines.length; i++) {
         final cols = lines[i].split(',');
-        if (nameIdx >= 0 &&
-            phoneIdx >= 0 &&
-            cols.length > max(nameIdx, phoneIdx)) {
-          tmp.add({
-            'name': cols[nameIdx].trim(),
-            'phone': cols[phoneIdx].trim(),
-          });
+        if (cols.length > max(nameIdx, phoneIdx)) {
+          final name = cols[nameIdx].trim();
+          final phone = cols[phoneIdx].trim();
+          if (name.isNotEmpty && phone.isNotEmpty) {
+            tmp.add({'name': name, 'phone': phone});
+          }
         }
       }
+
       setState(() => _parsedCsv = tmp);
+      print('✅ Parsed CSV Participants: $_parsedCsv');
+
+      // הוספת כל המשתתפים לקולקשן users
+      await _addParticipantsToUsers();
+
     } catch (e) {
+      print('❌ Error parsing CSV: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('שגיאה בקריאת ה־CSV: $e')),
       );
+    }
+  }
+
+  Future<void> _addParticipantsToUsers() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User not logged in')));
+      return;
+    }
+
+    try {
+      for (var participant in _parsedCsv) {
+        final phone = participant['phone']!;
+
+        // הוספת שדות נוספים (email, password)
+        final email = '${phone}@example.com'; // אפשר ליצור מייל לפי הטלפון
+        final password = 'defaultPassword'; // אפשר ליצור סיסמה ברירת מחדל או לבקש מהמשתמש למלא אותה
+
+        // הוספה לקולקשן 'users'
+        await FirebaseFirestore.instance.collection('users').doc(phone).set({
+          'phone': phone,
+          'email': email,
+          'password': password, // יש להוסיף את הסיסמה במקרה הזה
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        print('Added user with phone: $phone');
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Participants added successfully!')));
+    } catch (e) {
+      print('Error adding participants: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding participants: $e')));
     }
   }
 
@@ -155,21 +219,13 @@ class _ManagerDetailsUpdateScreenState
   }
 
   Future<void> _saveEvent() async {
-    print('🔔 _saveEvent called');
-    if (!_formKey.currentState!.validate()) {
-      print('⚠️ Form not valid');
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      print('⚠️ User not authenticated');
-      return;
-    }
+    if (user == null) return;
 
     setState(() => _isSaving = true);
     try {
       final docRef = FirebaseFirestore.instance.collection('events').doc();
-      print('📄 Creating event ${docRef.id}');
 
       // 1) בסיס האירוע
       await docRef.set({
@@ -188,49 +244,27 @@ class _ManagerDetailsUpdateScreenState
       final imageUrls = <String>[];
       for (var i = 0; i < _eventImages.length; i++) {
         final f = _eventImages[i];
-        final filename =
-            '${docRef.id}_$i_${DateTime.now().millisecondsSinceEpoch}';
+        final filename = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
         final ref = FirebaseStorage.instance
             .ref('events/${docRef.id}/images/$filename');
         try {
           await ref.putFile(f);
           final url = await ref.getDownloadURL();
           imageUrls.add(url);
-          print('🖼️ Uploaded image $i: $url');
         } catch (e) {
-          print('🔺 failed to upload image $i: $e');
+          print('Failed to upload image $i: $e');
         }
       }
       await docRef.update({'imageUrls': imageUrls});
 
-      // 3) העלאת CSV
-      final csvPath = _csvResult?.files.single.path;
-      if (csvPath != null) {
-        final f = File(csvPath);
-        final ref = FirebaseStorage.instance
-            .ref('events/${docRef.id}/participants.csv');
-        try {
-          await ref.putFile(f);
-          final url = await ref.getDownloadURL();
-          await docRef.update({'participantFileUrl': url});
-          print('📑 Uploaded CSV: $url');
-        } catch (e) {
-          print('🔺 failed to upload CSV: $e');
-        }
-      }
-
-// 4) שמירת המשתתפים ושמירתם גם כ־allowed_users
-      for (var p in _parsedCsv) {
-        await docRef.collection('csvParticipants').add(p);
-        await _addAllowedUser(p['phone']!);
-      }
-      for (var p in _manualParticipants) {
-        await docRef.collection('manualParticipants').add(p);
+      // 3) עיבוד CSV והוספת משתתפים
+      final allParticipants = [..._parsedCsv, ..._manualParticipants];
+      for (var p in allParticipants) {
+        await docRef.collection('participants').add(p);
         await _addAllowedUser(p['phone']!);
       }
 
-
-      // 5) קישור למנהל
+      // 4) קישור למנהל
       await FirebaseFirestore.instance
           .collection('managers')
           .doc(user.uid)
@@ -238,16 +272,18 @@ class _ManagerDetailsUpdateScreenState
           .doc(docRef.id)
           .set({
         'ref': docRef.id,
+        'eventName': _nameCtrl.text.trim(),
+        'eventType': _eventType,
+        'location': _locationCtrl.text.trim(),
+        'date': _selectedDate?.toIso8601String(),
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      print('✅ Event saved successfully');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Event saved successfully!')),
       );
-      Navigator.pop(context);
-    } catch (e, st) {
-      print('❌ Error saving event: $e\n$st');
+      Navigator.pushNamedAndRemoveUntil(context, '/manager_home', (route) => false);
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error saving event: $e')),
       );
@@ -256,9 +292,7 @@ class _ManagerDetailsUpdateScreenState
     }
   }
 
-  // 1) הוספת ה־helper
   Future<void> _addAllowedUser(String phone) async {
-    // אם אין + ברישום – ננרמל ל־+972...
     final normalized = phone.startsWith('+') ? phone : '+972${phone.substring(1)}';
     await FirebaseFirestore.instance
         .collection('allowed_users')
@@ -268,7 +302,6 @@ class _ManagerDetailsUpdateScreenState
       'addedAt': FieldValue.serverTimestamp(),
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -443,6 +476,20 @@ class _ManagerDetailsUpdateScreenState
                     color: Color(0xFF727D73),
                   ),
                 ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GuideScreen(
+                          section: 'Upload Participant List', // החלק הספציפי של ההנחיות
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text('View Guidelines'),
+                ),
+
                 ElevatedButton.icon(
                   onPressed: _pickCsv,
                   icon: Icon(Icons.upload_file, color: Colors.white),

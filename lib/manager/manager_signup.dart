@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
 import 'manager_event_type_screen.dart';
+import 'manager_login.dart';
 
 class ManagerRegisterScreen extends StatefulWidget {
   @override
@@ -81,7 +82,7 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFD0DDD0),
+      backgroundColor: Colors.grey[200],
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -91,10 +92,10 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     'Get started',
                     style: TextStyle(
-                      color: Color(0xFF727D73),
+                      color: Colors.grey[700],
                       fontWeight: FontWeight.bold,
                       fontSize: 60,
                       fontFamily: 'Satreva',
@@ -104,6 +105,39 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                     'images/icon.png',
                     height: 250,
                   ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Already registered? ',
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontFamily: 'Source Sans 3',
+                          fontSize: 15, // ניתן לשנות את הגודל פה
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ManagerLoginScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'Log in',
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            fontFamily: 'Source Sans 3',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
                   TextFormField(
                     controller: emailController,
                     decoration: InputDecoration(
