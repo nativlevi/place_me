@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:place_me/participant/participant_reset_password.dart';
 import 'participant_events_screen.dart';
 import 'participant_signup.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,6 +17,10 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   bool _isPasswordVisible = false;
+
+  get verificationId => null;
+
+  get phoneNumber => null;
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
@@ -187,7 +192,17 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                 const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
-                    // נווט למסך שחזור סיסמה
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ParticipantResetPasswordScreen(
+                          verificationId: verificationId, // העבר את ה-verificationId כאן
+                          phoneNumber: phoneNumber,
+                          email: '',         // העבר את ה-phoneNumber כאן
+                        ),
+                      ),
+                    );
+
                   },
                   child: Align(
                     alignment: Alignment.center,

@@ -42,16 +42,16 @@ class _ParticipantForgotPasswordScreenState extends State<ParticipantForgotPassw
         setState(() {
           _isLoading = false;
         });
-        // נווט למסך להזנת הקוד והסיסמה החדשה
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ParticipantResetPasswordScreen(
-              verificationId: verificationId,
-              phoneNumber: phone,
-            ),
-          ),
-        );
+        // // נווט למסך להזנת הקוד והסיסמה החדשה
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => ParticipantResetPasswordScreen(
+        //       verificationId: verificationId,
+        //       phoneNumber: phone, email: '',
+        //     ),
+        //   ),
+        // );
       },
       codeAutoRetrievalTimeout: (String verificationId) {
         // ניתן לטפל במקרה זה אם יש צורך
