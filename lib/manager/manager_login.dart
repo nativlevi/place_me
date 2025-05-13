@@ -117,84 +117,88 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[200],
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 20),
-                  Text(
-                    'Welcome back',
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                      fontWeight: FontWeight.bold,
-                      fontSize: 60,
-                      fontFamily: 'Satreva',
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 20),
+                Text(
+                  'Welcome back',
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 60,
+                    fontFamily: 'Satreva',
+                  ),
+                ),
+                Image.asset(
+                  'images/icon.png',
+                  height: 250,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account? ",
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontFamily: 'Source Sans 3',
+                        fontSize: 15,
+                      ),
                     ),
-                  ),
-                  Image.asset(
-                    'images/icon.png',
-                    height: 230,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account? ",
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ManagerRegisterScreen()),
+                        );
+                      },
+                      child: Text(
+                        'SIGN UP',
                         style: TextStyle(
                           color: Colors.grey[700],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
                           fontFamily: 'Source Sans 3',
-                          fontSize: 15,
                         ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ManagerRegisterScreen()),
-                          );
-                        },
-                        child: Text(
-                          'SIGN UP',
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            fontFamily: 'Source Sans 3',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.person, color: Color(0xFF3D3D3D)),
-                      hintText: 'EMAIL',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30.0),
-                        borderSide: BorderSide.none,
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Center(
+                    child: TextFormField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                        hintText: 'EMAIL',
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                  const SizedBox(height: 15),
-                  TextFormField(
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
                     controller: passwordController,
                     obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
@@ -225,113 +229,113 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
-                      );
-                    },
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          color: Colors.grey[700],
-                          fontFamily: 'Source Sans 3',
-                        ),
+                ),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
+                    );
+                  },
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontFamily: 'Source Sans 3',
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  if (_errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: Text(
-                        _errorMessage!,
-                        style: TextStyle(
-                          color: Colors.red[800],
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3D3D3D),
-                      disabledBackgroundColor: const Color(0xFF3D3D3D),
-                      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0),
-                      ),
-                    ),
-                    child: _isLoading
-                        ? SizedBox(
-                      height: 50,
-                      width: 50,
-                      child: Lottie.network(
-                        'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
-                      ),
-                    )
-                        : const Text(
-                      'SIGN IN',
+                ),
+                const SizedBox(height: 20),
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: Text(
+                      _errorMessage!,
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
+                        color: Colors.red[800],
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 25),
-                  // Divider and "Or continue with" text
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Divider(
-                            thickness: 0.5,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                          child: Text(
-                            'Or continue with',
-                            style: TextStyle(
-                                color: Colors.grey[700],
-                                fontFamily: 'Source Sans 3'),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(
-                            thickness: 0.5,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                      ],
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _handleLogin,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3D3D3D),
+                    disabledBackgroundColor: const Color(0xFF3D3D3D),
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
                     ),
                   ),
-                  const SizedBox(height: 25),
-                  // כפתורי התחברות: Google ו-Facebook
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: _isLoading
+                      ? SizedBox(
+                    height: 50,
+                    width: 50,
+                    child: Lottie.network(
+                      'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
+                    ),
+                  )
+                      : const Text(
+                    'SIGN IN',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 25),
+                // Divider and "Or continue with" text
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => signInWithGoogle(),
-                        child: Image.asset('images/google.png', height: 35),
+                      Expanded(
+                        child: Divider(
+                          thickness: 0.5,
+                          color: Colors.grey[400],
+                        ),
                       ),
-                      const SizedBox(width: 25),
-                      GestureDetector(
-                        onTap: () => signInWithFacebook(),
-                        child: Image.asset('images/facebook.png', height: 35),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        child: Text(
+                          'Or continue with',
+                          style: TextStyle(
+                              color: Colors.grey[700],
+                              fontFamily: 'Source Sans 3'),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(
+                          thickness: 0.5,
+                          color: Colors.grey[400],
+                        ),
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 25),
+                // כפתורי התחברות: Google ו-Facebook
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () => signInWithGoogle(),
+                      child: Image.asset('images/google.png', height: 35),
+                    ),
+                    const SizedBox(width: 25),
+                    GestureDetector(
+                      onTap: () => signInWithFacebook(),
+                      child: Image.asset('images/facebook.png', height: 35),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
