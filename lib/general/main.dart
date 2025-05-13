@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../firebase/firebase_options.dart';
+import '../manager/manager_home_screen.dart';
 import 'loading.dart';
 import '../manager/manager_login.dart';
 import '../manager/manager_signup.dart';
@@ -8,11 +9,10 @@ import '../manager/manager_event_type_screen.dart';
 import '../manager/manager_event_details_screen.dart';
 import '../participant/participant_login.dart';
 import '../participant/participant_signup.dart';
-import '../participant/participant_events_screen.dart';
 import 'guide_screen.dart';
 import '../participant/preferences_screen.dart';
 import 'splash_screen.dart';
-import '../add_participant_screen.dart';
+import '../participant/add_participant_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/splash': (context) => SplashScreen(),
           '/login': (context) => LoginScreen(),
-          '/guide': (context) => GuideScreen(),
+          '/guide': (context) => GuideScreen(section: '',),
           '/manager_login': (context) => ManagerLoginScreen(),
           '/participant_login': (context) => ParticipantLoginScreen(),
           '/loading': (context) => LoadingScreen(
@@ -41,13 +41,13 @@ class MyApp extends StatelessWidget {
           '/manager_signup': (context) => ManagerRegisterScreen(),
           '/participant_signup': (context) => ParticipantSignupScreen(),
           '/manager_dashboard': (context) => ManagerEventTypeScreen(),
-          //'/participant_dashboard': (context) => ParticipantEventsScreen(),
           '/manager_event_type_screen': (context) => ManagerEventTypeScreen(),
           '/event_details': (context) => ManagerDetailsUpdateScreen(),
-          //'/participant_events': (context) => ParticipantEventsScreen(p),
           '/seating_preferences': (context) =>
               SeatingPreferencesScreen(eventType: 'Classroom/Workshop', phone: '', eventId: null,),
           '/add_participant': (context) => AddParticipantScreen(),
+          '/manager_home': (context) => ManagerHomeScreen(),
+
         },
       ),
     );
