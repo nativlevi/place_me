@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 class GuideScreen extends StatelessWidget {
+  final String section;
+
+  GuideScreen({required this.section});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,6 +50,7 @@ This guide provides detailed instructions on using the app:
 3. Adding participants: Upload participant lists in CSV or Excel format.
 4. Managing seating preferences: Set your seating preferences based on the event type.
                   
+
                   Thank you for using our app!
                   ''',
                   style: TextStyle(
@@ -57,6 +62,20 @@ This guide provides detailed instructions on using the app:
                 ),
               ),
             ),
+            SizedBox(height: 20),
+            // Display specific section
+            if (section == 'Upload Participant List')
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Upload Participant List Guidelines', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 10),
+                  Text('1. Ensure your file is in CSV format.', style: TextStyle(fontSize: 16)),
+                  Text('2. The first row should contain: name, phone.', style: TextStyle(fontSize: 16)),
+                  Text('3. Ensure there are no empty rows.', style: TextStyle(fontSize: 16)),
+                  Text('4. Avoid special characters in phone numbers.', style: TextStyle(fontSize: 16)),
+                ],
+              ),
             SizedBox(height: 20),
             // Back button
             Center(

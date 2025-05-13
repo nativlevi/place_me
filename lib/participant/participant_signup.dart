@@ -14,11 +14,13 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
   TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
 
-  /// ממיר מספר טלפון לפורמט בינלאומי
-  /// לדוגמה: "0524559623" → "+972524559623"
+  /// Convert phone number to international format
   String convertToInternational(String phone) {
     phone = phone.trim();
     if (!phone.startsWith('+')) {
@@ -27,8 +29,7 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
     return phone;
   }
 
-  /// ממיר מספר טלפון לפורמט "pseudo email"
-  /// לדוגמה: "+972524559623" → "972524559623@myapp.com"
+  /// Convert phone number to pseudo email format
   String convertPhoneToPseudoEmail(String phone) {
     String email = phone.replaceAll('+', '');
     return '$email@myapp.com';
@@ -37,17 +38,18 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
   Future<void> _registerUser() async {
     final String phone = phoneController.text.trim();
     final String password = passwordController.text.trim();
+    final String email = emailController.text.trim();
 
-    if (phone.isEmpty || password.isEmpty || confirmPasswordController.text.isEmpty) {
+    if (phone.isEmpty || password.isEmpty || confirmPasswordController.text.isEmpty || email.isEmpty) {
       setState(() {
-        _errorMessage = 'יש למלא את כל השדות.';
+        _errorMessage = 'Please fill in all the fields.';
       });
       return;
     }
 
     if (password != confirmPasswordController.text) {
       setState(() {
-        _errorMessage = 'הסיסמאות לא תואמות.';
+        _errorMessage = 'Passwords do not match.';
       });
       return;
     }
@@ -58,28 +60,30 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
     });
 
     try {
-      // המרה לפורמט בינלאומי והמרה לפורמט pseudo email
+      // Convert phone to international format and pseudo email format
       String internationalPhone = convertToInternational(phone);
       String pseudoEmail = convertPhoneToPseudoEmail(internationalPhone);
 
-      // יצירת משתמש באמצעות Firebase Auth עם הפורמט הפיקטיבי כאימייל
+      // Create user using Firebase Auth with pseudo email format
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
         email: pseudoEmail,
         password: password,
       );
 
-      // ניתן לשמור גם מידע נוסף ב־Firestore, לדוגמה:
+      // Save additional user information to Firestore
       await FirebaseFirestore.instance.collection("users").doc(internationalPhone).set({
         'phone': internationalPhone,
+        'email': email,  // Save the email for password recovery
+        'password': password, // Save the password
         'createdAt': FieldValue.serverTimestamp(),
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('משתמש נרשם בהצלחה!')),
+        SnackBar(content: Text('User registered successfully!')),
       );
 
-      // מעבר למסך ההתחברות או למסך הראשי, לדוגמה:
+      // Navigate to login screen after registration
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => ParticipantLoginScreen()),
@@ -106,10 +110,10 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Get started',
                   style: TextStyle(
-                    color: Color(0xFF727D73),
+                    color: Colors.grey[700],
                     fontWeight: FontWeight.bold,
                     fontSize: 60,
                     fontFamily: 'Satreva',
@@ -119,20 +123,44 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                   'images/icon.png',
                   height: 250,
                 ),
-                const Text(
-                  'בחר סיסמה',
-                  style: TextStyle(
-                    color: Color(0xFF727D73),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 30,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already registered? ',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontFamily: 'Source Sans 3',
+                        fontSize: 15, // ניתן לשנות את הגודל פה
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ParticipantLoginScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Log in',
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          fontFamily: 'Source Sans 3',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: phoneController,
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.phone, color: Color(0xFF3D3D3D)),
-                    hintText: 'Phone Number',
+                    hintText: 'PHONE NUMBER',
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
@@ -143,11 +171,10 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                 ),
                 const SizedBox(height: 20),
                 TextField(
-                  controller: passwordController,
-                  obscureText: true,
+                  controller: emailController,
                   decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
-                    hintText: 'סיסמה חדשה',
+                    prefixIcon: Icon(Icons.email, color: Color(0xFF3D3D3D)),
+                    hintText: 'EMAIL (FOR PASSWORD RECOVERY)',
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
@@ -156,18 +183,69 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: confirmPasswordController,
-                  obscureText: true,
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: !_passwordVisible,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
-                    hintText: 'אשר סיסמה',
+                    hintText: 'PASSWORD',
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30.0),
                       borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                        color: const Color(0xFF3D3D3D),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
+                      },
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    if (value.length < 8 ||
+                        !RegExp(r'[A-Z]').hasMatch(value) ||
+                        !RegExp(r'\d').hasMatch(value) ||
+                        !RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+                      return 'Password must be at least 8 characters, include an uppercase letter, number, and special character.';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 15),
+                TextField(
+                  controller: confirmPasswordController,
+                  obscureText: !_confirmPasswordVisible,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                    hintText: 'CONFIRM PASSWORD',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _confirmPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _confirmPasswordVisible = !_confirmPasswordVisible;
+                        });
+                      },
                     ),
                   ),
                 ),
@@ -194,7 +272,7 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
-                    'אמת והגדר סיסמה',
+                    'SET PASSWORD',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -203,19 +281,7 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                   ),
                 ),
                 const SizedBox(height: 15),
-                // אפשר להוסיף קישור חזרה למסך ההתחברות:
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ParticipantLoginScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text('כבר רשום? התחבר'),
-                ),
-              ],
+                ],
             ),
           ),
         ),
