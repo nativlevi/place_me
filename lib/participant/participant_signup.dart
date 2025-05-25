@@ -62,20 +62,21 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
     try {
       // Convert phone to international format and pseudo email format
       String internationalPhone = convertToInternational(phone);
-      String pseudoEmail = convertPhoneToPseudoEmail(internationalPhone);
+      final realEmail = emailController.text.trim();
 
       // Create user using Firebase Auth with pseudo email format
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email: pseudoEmail,
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: realEmail,
         password: password,
       );
 
-      // Save additional user information to Firestore
-      await FirebaseFirestore.instance.collection("users").doc(internationalPhone).set({
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(internationalPhone)
+          .set({
         'phone': internationalPhone,
-        'email': email,  // Save the email for password recovery
-        'password': password, // Save the password
+        'recoveryEmail': email,
+        'password': password,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -170,7 +171,7 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                TextField(
+                TextFormField(
                   controller: emailController,
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.email, color: Color(0xFF3D3D3D)),
@@ -182,7 +183,17 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                       borderSide: BorderSide.none,
                     ),
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email for password recovery';
+                    }
+                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      return 'Please enter a valid email address';
+                    }
+                    return null;
+                  },
                 ),
+
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: passwordController,

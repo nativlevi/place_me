@@ -282,17 +282,38 @@ class _ManagerDetailsUpdateScreenState
 // 4) שמירת המשתתפים ושמירתם גם כ־allowed_users
       final allParticipants = [..._parsedCsv, ..._manualParticipants];
 
+<<<<<<< HEAD
       final participantPhones =
           allParticipants.map((p) => p['phone']!).toSet().toList();
+=======
+      final participantPhones = allParticipants.map((p) {
+        String phone = p['phone']!.trim();
+        if (!phone.startsWith('+')) {
+          phone = '+972${phone.substring(1)}';
+        }
+        return phone;
+      }).toSet().toList();
+>>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
 
       // שמירת המערך במסמך האירוע הראשי:
       await docRef.update({
         'allowedParticipants': participantPhones,
       });
       for (var p in allParticipants) {
-        await docRef.collection('participants').add(p);
-        await _addAllowedUser(p['phone']!);
+        String phone = p['phone']!.trim();
+        if (!phone.startsWith('+')) {
+          phone = '+972${phone.substring(1)}';
+        }
+
+        await docRef.collection('participants').add({
+          'name': p['name'],
+          'phone': phone,
+          'addedAt': FieldValue.serverTimestamp(),
+        });
+
+        await _addAllowedUser(phone, docRef.id);
       }
+
 
       // 5) קישור למנהל
 
@@ -329,19 +350,25 @@ class _ManagerDetailsUpdateScreenState
     }
   }
 
-  Future<void> _addAllowedUser(String phone) async {
-    // אם אין + ברישום – ננרמל ל־+972...
-    final normalized =
-        phone.startsWith('+') ? phone : '+972${phone.substring(1)}';
+  Future<void> _addAllowedUser(String phone, String eventId) async {
+    final docRef = FirebaseFirestore.instance.collection('events').doc(eventId);
 
+<<<<<<< HEAD
+=======
+    await docRef.update({
+      'allowedParticipants': FieldValue.arrayUnion([phone]),
+    });
+
+>>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
     await FirebaseFirestore.instance
         .collection('allowed_users')
-        .doc(normalized)
+        .doc(phone)
         .set({
-      'phone': normalized,
+      'phone': phone,
       'addedAt': FieldValue.serverTimestamp(),
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -395,7 +422,7 @@ class _ManagerDetailsUpdateScreenState
                     ),
                   ),
                   validator: (v) =>
-                      v == null || v.isEmpty ? 'נא למלא שם אירוע' : null,
+                  v == null || v.isEmpty ? 'נא למלא שם אירוע' : null,
                 ),
                 SizedBox(height: 20),
 
@@ -404,7 +431,7 @@ class _ManagerDetailsUpdateScreenState
                   controller: _locationCtrl,
                   decoration: InputDecoration(
                     prefixIcon:
-                        Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
+                    Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
                     hintText: 'Enter Location',
                     filled: true,
                     fillColor: Colors.white,
@@ -414,7 +441,7 @@ class _ManagerDetailsUpdateScreenState
                     ),
                   ),
                   validator: (v) =>
-                      v == null || v.isEmpty ? 'נא למלא מיקום' : null,
+                  v == null || v.isEmpty ? 'נא למלא מיקום' : null,
                 ),
                 SizedBox(height: 20),
 
@@ -492,19 +519,19 @@ class _ManagerDetailsUpdateScreenState
                     runSpacing: 10,
                     children: _eventImages
                         .map((f) => Stack(
-                              children: [
-                                Image.file(f, width: 100, height: 100),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _eventImages.remove(f)),
-                                    child: Icon(Icons.close, color: Colors.red),
-                                  ),
-                                ),
-                              ],
-                            ))
+                      children: [
+                        Image.file(f, width: 100, height: 100),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () =>
+                                setState(() => _eventImages.remove(f)),
+                            child: Icon(Icons.close, color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ))
                         .toList(),
                   ),
                 ],
@@ -526,7 +553,11 @@ class _ManagerDetailsUpdateScreenState
                       MaterialPageRoute(
                         builder: (context) => GuideScreen(
                           section:
+<<<<<<< HEAD
                               'Upload Participant List', // החלק הספציפי של ההנחיות
+=======
+                          'Upload Participant List', // החלק הספציפי של ההנחיות
+>>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
                         ),
                       ),
                     );
@@ -576,7 +607,7 @@ class _ManagerDetailsUpdateScreenState
                         controller: _participantNameCtrl,
                         decoration: InputDecoration(
                           prefixIcon:
-                              Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                          Icon(Icons.person, color: Color(0xFF3D3D3D)),
                           hintText: 'Name',
                           filled: true,
                           fillColor: Colors.white,
@@ -593,7 +624,7 @@ class _ManagerDetailsUpdateScreenState
                         controller: _participantPhoneCtrl,
                         decoration: InputDecoration(
                           prefixIcon:
-                              Icon(Icons.phone, color: Color(0xFF3D3D3D)),
+                          Icon(Icons.phone, color: Color(0xFF3D3D3D)),
                           hintText: 'Phone',
                           filled: true,
                           fillColor: Colors.white,
@@ -630,29 +661,29 @@ class _ManagerDetailsUpdateScreenState
                     onPressed: _isSaving
                         ? null
                         : () async {
-                            print('🔘 Submit pressed');
-                            await _saveEvent();
-                          },
+                      print('🔘 Submit pressed');
+                      await _saveEvent();
+                    },
                     child: _isSaving
                         ? SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
                         : Text(
-                            'Submit',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                      'Submit',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF3D3D3D),
                       padding:
-                          EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                      EdgeInsets.symmetric(vertical: 15, horizontal: 100),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
