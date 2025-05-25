@@ -4,11 +4,13 @@ class EventDetailsScreen extends StatelessWidget {
   final String title;
   final String date;
   final String location;
+  final String time;
 
   EventDetailsScreen({
     required this.title,
     required this.date,
     required this.location,
+    required this.time,
   });
 
   @override
@@ -38,6 +40,12 @@ class EventDetailsScreen extends StatelessWidget {
                 color: Colors.grey[700],
               ),
             ),
+            SizedBox(height: 5),
+            Text('Time: $time',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey[700],
+                )),
             SizedBox(height: 10),
             Text(
               'Location: $location',

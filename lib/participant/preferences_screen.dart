@@ -5,11 +5,15 @@ import 'package:lottie/lottie.dart';
 class SeatingPreferencesScreen extends StatefulWidget {
   final String eventType;
   final String phone;
+  final String eventId;
+  final String eventName;
 
   const SeatingPreferencesScreen({
     Key? key,
     required this.eventType,
-    required this.phone, required eventId,
+    required this.phone,
+    required this.eventName,
+    required this.eventId,
   }) : super(key: key);
 
   @override
@@ -21,6 +25,9 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
   // controllers לשני ה-TextFields
   final TextEditingController _toController = TextEditingController();
   final TextEditingController _notToController = TextEditingController();
+  List<String> _participants = [];
+  List<String> _toList = [];
+  List<String> _notToList = [];
 
   late Map<String, bool> preferences;
   bool showInLists = true;
@@ -31,6 +38,7 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
     super.initState();
     _initPreferencesKeys();
     _loadPreferencesFromFirestore();
+    _fetchParticipants();
   }
 
   @override
@@ -38,6 +46,82 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
     _toController.dispose();
     _notToController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchParticipants() async {
+    final col = FirebaseFirestore.instance
+        .collection('events')
+        .doc(widget.eventId)
+        .collection('participants');
+    final snap = await col.get();
+    setState(() {
+      _participants =
+          snap.docs.map((d) => (d.data()['name'] as String?) ?? d.id).toList();
+    });
+  }
+
+  Future<void> _showMultiSelectDialog(bool isToField) async {
+    // העתקת הבחירות הנוכחיות לטמפ־ליסט כדי לא לבטל אותן במקרה של 'ביטול'
+    final tempList = List<String>.from(isToField ? _toList : _notToList);
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx2, setStateDialog) {
+            return AlertDialog(
+              title: Text(isToField
+                  ? 'Select one or more to sit next to'
+                  : 'Select one or more to NOT sit next to'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: _participants.map((name) {
+                    final selected = tempList.contains(name);
+                    return CheckboxListTile(
+                      value: selected,
+                      title: Text(name),
+                      onChanged: (checked) {
+                        setStateDialog(() {
+                          if (checked == true) {
+                            tempList.add(name);
+                          } else {
+                            tempList.remove(name);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx2),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // שמירת הבחירות הסופיות ב־state
+                    setState(() {
+                      if (isToField) {
+                        _toList = tempList;
+                        _toController.text = _toList.join(', ');
+                      } else {
+                        _notToList = tempList;
+                        _notToController.text = _notToList.join(', ');
+                      }
+                    });
+                    Navigator.pop(ctx2);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   /// בונה את המפת העדפות עם ברירות מחדל (false)
@@ -73,12 +157,11 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
 
   /// טוען את העדפות המשתתף (אם כבר קיימות) ומעדכן את ה־UI
   Future<void> _loadPreferencesFromFirestore() async {
-    final safeType = widget.eventType.replaceAll('/', '_');
     final docRef = FirebaseFirestore.instance
         .collection('users')
         .doc(widget.phone)
         .collection('preferences')
-        .doc(safeType);
+        .doc(widget.eventId);
 
     final snap = await docRef.get();
     if (!snap.exists) return;
@@ -109,11 +192,14 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
         .collection('users')
         .doc(widget.phone)
         .collection('preferences')
-        .doc(safeType);
+        .doc(widget.eventId);
 
     final payload = {
-      'preferTo': _toController.text.trim(),
-      'preferNotTo': _notToController.text.trim(),
+      'eventId': widget.eventId,
+      'eventType': widget.eventType,
+      'eventName': widget.eventName,
+      'preferToList': _toList,
+      'preferNotToList': _notToList,
       'showInLists': showInLists,
       'options': preferences,
       'updatedAt': FieldValue.serverTimestamp(),
@@ -223,9 +309,10 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
             // שדה "I want to sit next to"
             TextField(
               controller: _toController,
+              readOnly: true,
+              onTap: () => _showMultiSelectDialog(true),
               decoration: InputDecoration(
-                prefixIcon:
-                const Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                prefixIcon: const Icon(Icons.person, color: Color(0xFF3D3D3D)),
                 hintText: 'I want to sit next to:',
                 filled: true,
                 fillColor: Colors.white,
@@ -240,9 +327,11 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
             // שדה "I don’t want to sit next to"
             TextField(
               controller: _notToController,
+              readOnly: true,
+              onTap: () => _showMultiSelectDialog(false),
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.person_off,
-                    color: Color(0xFF3D3D3D)),
+                prefixIcon:
+                    const Icon(Icons.person_off, color: Color(0xFF3D3D3D)),
                 hintText: 'I don’t want to sit next to:',
                 filled: true,
                 fillColor: Colors.white,
@@ -285,9 +374,9 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
             // רשימת ההעדפות
             ...preferences.keys
                 .map((k) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: _buildToggleCard(k),
-            ))
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: _buildToggleCard(k),
+                    ))
                 .toList(),
 
             const SizedBox(height: 20),
@@ -297,26 +386,26 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
               onPressed: _isSaving ? null : _savePreferences,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3D3D3D),
-                padding: const EdgeInsets.symmetric(
-                    vertical: 15, horizontal: 100),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30)),
               ),
               child: _isSaving
                   ? SizedBox(
-                height: 50,
-                width: 50,
-                child: Lottie.network(
-                  'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
-                ),
-              )
+                      height: 50,
+                      width: 50,
+                      child: Lottie.network(
+                        'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
+                      ),
+                    )
                   : const Text(
-                'SAVE',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold),
-              ),
+                      'SAVE',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold),
+                    ),
             ),
           ],
         ),
