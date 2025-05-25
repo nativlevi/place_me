@@ -35,7 +35,8 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
     }
   }
 
-  List<QueryDocumentSnapshot> sortDocs(List<QueryDocumentSnapshot> docs, String sortBy) {
+  List<QueryDocumentSnapshot> sortDocs(
+      List<QueryDocumentSnapshot> docs, String sortBy) {
     if (sortBy == 'שם (א-ב)') {
       docs.sort((a, b) {
         final aName = (a.data() as Map)['eventName'] ?? '';
@@ -120,15 +121,6 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-<<<<<<< HEAD
-        child: StreamBuilder<QuerySnapshot>(
-          stream: managerEventsRef.snapshots(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData)
-              return Center(child: CircularProgressIndicator());
-            List<QueryDocumentSnapshot> docs = snapshot.data!.docs;
-            final sortedDocs = sortDocs(List.from(docs), _sortOption);
-=======
         child: Column(
           children: [
             // 🔍 TextField לחיפוש
@@ -141,7 +133,8 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
-                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 0, horizontal: 16),
               ),
               onChanged: (val) => setState(() {
                 _searchQuery = val.trim().toLowerCase();
@@ -152,70 +145,50 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
               child: StreamBuilder<QuerySnapshot>(
                 stream: managerEventsRef.snapshots(),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
->>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
-
+                  if (!snapshot.hasData)
+                    return Center(child: CircularProgressIndicator());
                   List<QueryDocumentSnapshot> docs = snapshot.data!.docs;
                   final sorted = sortDocs(List.from(docs), _sortOption);
 
                   final filtered = sorted.where((d) {
                     final data = d.data() as Map<String, dynamic>;
-                    final name = (data['eventName'] ?? '').toString().toLowerCase();
-                    final type = (data['eventType'] ?? '').toString().toLowerCase();
+                    final name =
+                        (data['eventName'] ?? '').toString().toLowerCase();
+                    final type =
+                        (data['eventType'] ?? '').toString().toLowerCase();
                     return _searchQuery.isEmpty ||
                         name.contains(_searchQuery) ||
                         type.contains(_searchQuery);
                   }).toList();
 
-<<<<<<< HEAD
-                final eventDocId = data['ref'] ?? '';
-                final eventName = data['eventName'] ?? 'No Event Name';
-                final eventType = data['eventType'] ?? 'No Event Type';
-                final location = data['location'] ?? 'No Location';
-                final rawDate = (data['date'] as String?)?.trim();
-                final rawTime = (data['time'] as String?)?.trim();
-
-                String displayDateTime = 'No Date/Time';
-
-                if (rawDate != null && rawDate.isNotEmpty) {
-                  final dateOnly = rawDate.split('T').first;
-                  final timeOnly = (rawTime != null && rawTime.isNotEmpty)
-                      ? rawTime
-                      : '00:00';
-                  final combined = '$dateOnly $timeOnly';
-                  try {
-                    final parsed =
-                        DateFormat('yyyy-MM-dd HH:mm').parseStrict(combined);
-                    displayDateTime =
-                        DateFormat('MMM d, yyyy HH:mm').format(parsed);
-                  } catch (e) {
-                    print('❌ Parse failed for "$combined": $e');
-                    displayDateTime = 'Invalid date/time';
-                  }
-                }
-// אחרת נשאיר displayDateTime כ־'No Date/Time'
-=======
-                  if (filtered.isEmpty) return Center(child: Text('לא נמצאו אירועים'));
-
                   return ListView.builder(
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
-                      final docSnapshot = filtered[index];
-                      final data = docSnapshot.data() as Map<String, dynamic>;
->>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
-
+                      final doc = filtered[index];
+                      final data = doc.data() as Map<String, dynamic>;
                       final eventDocId = data['ref'] ?? '';
                       final eventName = data['eventName'] ?? 'No Event Name';
                       final eventType = data['eventType'] ?? 'No Event Type';
                       final location = data['location'] ?? 'No Location';
-                      final dateString = data['date'] as String?;
+                      final rawDate = (data['date'] as String?)?.trim();
+                      final rawTime = (data['time'] as String?)?.trim();
+
                       String displayDateTime = 'No Date/Time';
-                      if (dateString != null && dateString.isNotEmpty) {
+
+                      if (rawDate != null && rawDate.isNotEmpty) {
+                        final dateOnly = rawDate.split('T').first;
+                        final timeOnly = (rawTime != null && rawTime.isNotEmpty)
+                            ? rawTime
+                            : '00:00';
+                        final combined = '$dateOnly $timeOnly';
                         try {
-                          final parsed = DateTime.parse(dateString);
-                          displayDateTime = _dateTimeFormat.format(parsed);
-                        } catch (_) {
-                          displayDateTime = 'Invalid date';
+                          final parsed = DateFormat('yyyy-MM-dd HH:mm')
+                              .parseStrict(combined);
+                          displayDateTime =
+                              DateFormat('MMM d, yyyy HH:mm').format(parsed);
+                        } catch (e) {
+                          print('❌ Parse failed for "$combined": $e');
+                          displayDateTime = 'Invalid date/time';
                         }
                       }
 
@@ -295,13 +268,16 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                                     context: context,
                                     builder: (_) => AlertDialog(
                                       title: Text('Delete Event'),
-                                      content: Text('Are you sure you want to delete this event?'),
+                                      content: Text(
+                                          'Are you sure you want to delete this event?'),
                                       actions: [
                                         TextButton(
-                                            onPressed: () => Navigator.pop(context, false),
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
                                             child: Text('Cancel')),
                                         TextButton(
-                                            onPressed: () => Navigator.pop(context, true),
+                                            onPressed: () =>
+                                                Navigator.pop(context, true),
                                             child: Text('Delete')),
                                       ],
                                     ),
@@ -317,12 +293,14 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                                         .collection('managers')
                                         .doc(currentUser!.uid)
                                         .collection('events')
-                                        .doc(docSnapshot.id)
+                                        .doc(doc.id)
                                         .delete();
 
                                     final storageRef = FirebaseStorage.instance
-                                        .ref().child('events/$eventDocId');
-                                    final ListResult items = await storageRef.listAll();
+                                        .ref()
+                                        .child('events/$eventDocId');
+                                    final ListResult items =
+                                        await storageRef.listAll();
                                     for (var item in items.items) {
                                       await item.delete();
                                     }
@@ -332,99 +310,20 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                                         await subItem.delete();
                                       }
                                     }
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(content: Text('Event deleted')));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                            content: Text('Event deleted')));
                                   } catch (e) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(content: Text('Error deleting event: $e')));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'Error deleting event: $e')));
                                   }
                                 },
                               ),
                             ],
                           ),
                         ),
-<<<<<<< HEAD
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: Text('Delete Event'),
-                                content: Text(
-                                    'Are you sure you want to delete this event?'),
-                                actions: [
-                                  TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: Text('Cancel')),
-                                  TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      child: Text('Delete')),
-                                ],
-                              ),
-                            );
-                            if (confirm != true) return;
-
-                            try {
-                              await FirebaseFirestore.instance
-                                  .collection('events')
-                                  .doc(eventDocId)
-                                  .delete();
-
-                              await FirebaseFirestore.instance
-                                  .collection('managers')
-                                  .doc(currentUser!.uid)
-                                  .collection('events')
-                                  .doc(docSnapshot.id)
-                                  .delete();
-
-                              // מחיקת התיקייה כולה מ־Firebase Storage
-                              final storageRef = FirebaseStorage.instance
-                                  .ref()
-                                  .child('events/$eventDocId');
-                              try {
-                                final ListResult items =
-                                    await storageRef.listAll();
-
-                                for (var item in items.items) {
-                                  await item.delete();
-                                }
-
-                                for (var prefix in items.prefixes) {
-                                  final subItems = await prefix.listAll();
-                                  for (var subItem in subItems.items) {
-                                    await subItem.delete();
-                                  }
-                                }
-
-                                print(
-                                    '🗑️ Deleted all files in events/$eventDocId');
-                              } catch (e) {
-                                print(
-                                    '❗ Failed to delete storage contents: $e');
-                              }
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Event deleted')),
-                              );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text('Error deleting event: $e')),
-                              );
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-=======
                       );
                     },
                   );
@@ -432,7 +331,6 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
               ),
             ),
           ],
->>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
         ),
       ),
       floatingActionButton: FloatingActionButton(

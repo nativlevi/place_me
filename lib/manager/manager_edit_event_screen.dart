@@ -46,6 +46,8 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
   List<XFile> _newImages = [];
   final _picker = ImagePicker();
 
+  List<Map<String, dynamic>> _participants = [];
+
   //Csv
   FilePickerResult? _csvResult;
   List<Map<String, String>> _parsedCsv = [];
@@ -148,18 +150,19 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
   }
 
   Future<void> _addParticipantsFromCsv() async {
-    final eventRef = FirebaseFirestore.instance.collection('events').doc(widget.eventId);
+    final eventRef =
+        FirebaseFirestore.instance.collection('events').doc(widget.eventId);
 
-// מחיקת כל המשתתפים הישנים
+    // מחיקת כל המשתתפים הישנים
     final existing = await eventRef.collection('participants').get();
     for (var doc in existing.docs) {
       await doc.reference.delete();
     }
 
-// איפוס allowedParticipants
+    // איפוס allowedParticipants
     await eventRef.update({'allowedParticipants': []});
 
-// הוספת משתתפים חדשים
+    // הוספת משתתפים חדשים
     for (var p in _parsedCsv) {
       await eventRef.collection('participants').add({
         'name': p['name'],
@@ -171,11 +174,11 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
       });
     }
 
-
-    // 4. שמירת קובץ ה־CSV ב־Firebase Storage
+    // שמירת קובץ ה־CSV ב־Firebase Storage
     final csvPath = _csvResult?.files.single.path;
     if (csvPath != null) {
-      final ref = FirebaseStorage.instance.ref('events/${widget.eventId}/participants.csv');
+      final ref = FirebaseStorage.instance
+          .ref('events/${widget.eventId}/participants.csv');
       await ref.putFile(File(csvPath));
       final url = await ref.getDownloadURL();
       await eventRef.update({'participantFileUrl': url});
@@ -186,19 +189,15 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
     );
   }
 
-
   void _showParticipantsDialog() {
-    final eventRef = FirebaseFirestore.instance
-        .collection('events')
-        .doc(widget.eventId);
+    final eventRef =
+        FirebaseFirestore.instance.collection('events').doc(widget.eventId);
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StreamBuilder<QuerySnapshot>(
-        stream: eventRef
-            .collection('participants')
-            .snapshots(),
+        stream: eventRef.collection('participants').snapshots(),
         builder: (ctx2, snap) {
           if (!snap.hasData) return Center(child: CircularProgressIndicator());
           final docs = snap.data!.docs;
@@ -226,26 +225,30 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                       subtitle: Text(p['phone']),
                       trailing: IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            final participantData = d.data() as Map<String, dynamic>;
-                            final rawPhone = participantData['phone'];
-                            final phoneToRemove = rawPhone.toString().trim(); // ביטחון מלא
+                        onPressed: () async {
+                          final participantData =
+                              d.data() as Map<String, dynamic>;
+                          final rawPhone = participantData['phone'];
+                          final phoneToRemove =
+                              rawPhone.toString().trim(); // ביטחון מלא
 
-                            print('🗑 Deleting participant with phone: $phoneToRemove');
+                          print(
+                              '🗑 Deleting participant with phone: $phoneToRemove');
 
-                            await d.reference.delete(); // מחיקה מה-collection
+                          await d.reference.delete(); // מחיקה מה-collection
 
-                            final eventDoc = FirebaseFirestore.instance
-                                .collection('events')
-                                .doc(widget.eventId);
+                          final eventDoc = FirebaseFirestore.instance
+                              .collection('events')
+                              .doc(widget.eventId);
 
-                            await eventDoc.update({
-                              'allowedParticipants': FieldValue.arrayRemove([phoneToRemove]),
-                            });
+                          await eventDoc.update({
+                            'allowedParticipants':
+                                FieldValue.arrayRemove([phoneToRemove]),
+                          });
 
-                            print('✅ Removed $phoneToRemove from allowedParticipants');
-                          }
-
+                          print(
+                              '✅ Removed $phoneToRemove from allowedParticipants');
+                        },
                       ),
                     );
                   }).toList(),
@@ -266,8 +269,8 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final eventRef = FirebaseFirestore.instance.collection('events').doc(widget.eventId);
-
+    final eventRef =
+        FirebaseFirestore.instance.collection('events').doc(widget.eventId);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFD0DDD0),
@@ -285,47 +288,28 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
         ),
       ),
       body: FutureBuilder<DocumentSnapshot>(
-<<<<<<< HEAD
-        future: docRef.get(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData)
-            return Center(child: CircularProgressIndicator());
-          if (!snapshot.data!.exists)
-            return Center(child: Text('Event does not exist'));
-=======
         future: eventRef.get(),
         builder: (context, snap) {
           if (!snap.hasData) return Center(child: CircularProgressIndicator());
-          if (!snap.data!.exists) return Center(child: Text('Event does not exist'));
->>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
+          if (!snap.data!.exists)
+            return Center(child: Text('Event does not exist'));
 
           final data = snap.data!.data() as Map<String, dynamic>;
           // Use the widget.eventId directly for participants
-          final eventRef =
-          FirebaseFirestore.instance.collection('events').doc(widget.eventId);
+          final eventRef = FirebaseFirestore.instance
+              .collection('events')
+              .doc(widget.eventId);
 
-<<<<<<< HEAD
           // INIT
           if (_eventNameController.text.isEmpty)
             _eventNameController.text = data['eventName'] ?? '';
           if (_locationController.text.isEmpty)
             _locationController.text = data['location'] ?? '';
           if (_selectedEventType == null)
-            _selectedEventType = data['eventType'] ?? eventTypeOptions.first;
+            _selectedEventType = data['eventType'];
           final rawDate = data['date'] as String?;
           final rawTime = data['time'] as String?; // תופס גם את השעה
           if (_selectedDateTime == null && rawDate != null) {
-=======
-          // INIT form fields once
-          if (_eventNameController.text.isEmpty) {
-            _eventNameController.text = data['eventName'] ?? '';
-          }
-          if (_locationController.text.isEmpty) {
-            _locationController.text = data['location'] ?? '';
-          }
-          _selectedEventType ??= data['eventType'] ?? _eventTypeOptions.first;
-          if (_selectedDateTime == null && data['date'] != null) {
->>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
             try {
               // אם אין time, נניח 00:00
               final timePart =
@@ -344,7 +328,6 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
           }
 
           return Padding(
-<<<<<<< HEAD
             padding:
                 const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
             child: SingleChildScrollView(
@@ -400,6 +383,42 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                       label: Text('Add Images'),
                     ),
                     SizedBox(height: 16),
+
+                    // CSV Upload Section
+                    Text('העלאת CSV של משתתפים:'),
+                    ElevatedButton.icon(
+                      onPressed: _pickCsv,
+                      icon: Icon(Icons.upload_file),
+                      label: Text(
+                          _csvResult == null ? 'בחר קובץ CSV' : 'CSV נבחר'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF3D3D3D),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30)),
+                      ),
+                    ),
+                    if (_csvResult != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                            'קובץ שנבחר: ${_csvResult!.files.single.name}',
+                            style: TextStyle(color: Colors.green)),
+                      ),
+
+                    SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: _showParticipantsDialog,
+                      icon: Icon(Icons.group),
+                      label: Text('ניהול משתתפים'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF3D3D3D),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30)),
+                      ),
+                    ),
+
+                    // Add manually
+                    SizedBox(height: 16),
                     Text('Add participants manually:'),
                     SizedBox(height: 10),
                     Row(
@@ -414,9 +433,7 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                         SizedBox(width: 10),
                         Container(
                           decoration: BoxDecoration(
-                            color: Color(0xFF3D3D3D),
-                            shape: BoxShape.circle,
-                          ),
+                              color: Color(0xFF3D3D3D), shape: BoxShape.circle),
                           child: IconButton(
                             icon: Icon(Icons.add, color: Colors.white),
                             onPressed: () async {
@@ -428,32 +445,29 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                       content: Text(
-                                          'Please enter both name and phone number')),
+                                          'Please enter both name and phone')),
                                 );
                                 return;
                               }
-                              final eventRef = FirebaseFirestore.instance
-                                  .collection('events')
-                                  .doc(eventDocId);
                               await eventRef.collection('participants').add({
                                 'name': name,
                                 'phone': phone,
                                 'addedAt': FieldValue.serverTimestamp(),
                               });
-
+                              final normalized = phone.startsWith('+')
+                                  ? phone
+                                  : '+972${phone.substring(1)}';
                               await eventRef.update({
                                 'allowedParticipants':
-                                    FieldValue.arrayUnion([phone]),
+                                    FieldValue.arrayUnion([normalized]),
                               });
-
                               _participantNameController.clear();
                               _participantPhoneController.clear();
                             },
                           ),
-                        )
+                        ),
                       ],
                     ),
-                    SizedBox(height: 10),
 
                     // Display participants list with delete button
                     ..._participants.map((p) => ListTile(
@@ -464,7 +478,7 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                             onPressed: () async {
                               await FirebaseFirestore.instance
                                   .collection('events')
-                                  .doc(eventDocId)
+                                  .doc(widget.eventId)
                                   .collection('participants')
                                   .doc(p['docId'])
                                   .delete();
@@ -476,124 +490,57 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                           ),
                         )),
 
+                    // Save changes
                     SizedBox(height: 30),
                     Center(
                       child: ElevatedButton(
                         onPressed: () async {
+                          // Update manager's metadata
                           final updateData = <String, dynamic>{
                             'eventName': _eventNameController.text.trim(),
                             'eventType': _selectedEventType,
                             'location': _locationController.text.trim(),
-                            'date': _selectedDateTime != null
-                                ? DateFormat('yyyy-MM-dd')
-                                    .format(_selectedDateTime!)
-                                : null,
                           };
 
                           if (_selectedDateTime != null) {
+                            final formattedDate = DateFormat('yyyy-MM-dd')
+                                .format(_selectedDateTime!);
                             final formattedTime =
                                 DateFormat('HH:mm').format(_selectedDateTime!);
+                            updateData['date'] = formattedDate;
                             updateData['time'] = formattedTime;
                           }
-
-                          await docRef.update(updateData);
-
-                          final eventRef = FirebaseFirestore.instance
-                              .collection('events')
-                              .doc(eventDocId);
 
                           // Delete removed images
                           for (var url in _imageUrlsToRemove) {
                             try {
-                              final ref =
-                                  FirebaseStorage.instance.refFromURL(url);
-                              await ref.delete();
+                              await FirebaseStorage.instance
+                                  .refFromURL(url)
+                                  .delete();
                             } catch (_) {}
                           }
 
                           // Upload new images
                           final newUrls = <String>[];
-                          for (var file in _newImages) {
-                            final filename =
-                                '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+                          for (var f in _newImages) {
+                            final fn =
+                                '${DateTime.now().millisecondsSinceEpoch}_${f.name}';
                             final ref = FirebaseStorage.instance
-                                .ref('events/$eventDocId/images/$filename');
-                            await ref.putFile(File(file.path));
-                            final url = await ref.getDownloadURL();
-                            newUrls.add(url);
+                                .ref('events/${widget.eventId}/images/$fn');
+                            await ref.putFile(File(f.path));
+                            newUrls.add(await ref.getDownloadURL());
                           }
+                          final allImages = [..._imageUrls, ...newUrls];
+                          updateData['imageUrls'] = allImages;
 
-                          final updatedImages = [..._imageUrls, ...newUrls];
-                          await eventRef.update(
-                              {...updateData, 'imageUrls': updatedImages});
+                          await eventRef.update(updateData);
 
                           ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Event updated')));
                           Navigator.pop(context);
-=======
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Container(
-              child: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Event fields
-                      _buildTextField('Enter Event Name', _eventNameController),
-                      SizedBox(height: 16),
-                      _buildDropdown(),
-                      SizedBox(height: 16),
-                      _buildDatePicker(),
-                      SizedBox(height: 16),
-                      _buildTextField('Enter Location', _locationController),
-
-                      // Images
-                      SizedBox(height: 16),
-                      Text('Event Images:', style: TextStyle(fontWeight: FontWeight.bold)),
-                      SizedBox(height: 10),
-                      Wrap(
-                        spacing: 10,
-                        children: [
-                          ..._imageUrls.map((url) => Stack(
-                            children: [
-                              Image.network(url, width: 100, height: 100),
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: GestureDetector(
-                                  onTap: () => setState(() {
-                                    _imageUrls.remove(url);
-                                    _imageUrlsToRemove.add(url);
-                                  }),
-                                  child: Icon(Icons.close, color: Colors.red),
-                                ),
-                              ),
-                            ],
-                          )),
-                          ..._newImages.map((f) => Image.file(File(f.path), width: 100, height: 100)),
-                        ],
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          final pics = await _picker.pickMultiImage();
-                          if (pics != null) setState(() => _newImages.addAll(pics));
->>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
                         },
-                        icon: Icon(Icons.add_a_photo),
-                        label: Text('Add Images'),
-                      ),
-
-                      // Manage participants button
-                      SizedBox(height: 16),
-                      Text('העלאת CSV של משתתפים:'),
-                      ElevatedButton.icon(
-                        onPressed: _pickCsv,
-                        icon: Icon(Icons.upload_file),
-                        label: Text(_csvResult == null ? 'בחר קובץ CSV' : 'CSV נבחר'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF3D3D3D),
-<<<<<<< HEAD
                           padding: EdgeInsets.symmetric(
                               vertical: 15, horizontal: 100),
                           shape: RoundedRectangleBorder(
@@ -602,110 +549,9 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                         child: Text('Save Changes',
                             style:
                                 TextStyle(fontSize: 18, color: Colors.white)),
-=======
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        ),
->>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
                       ),
-                      if (_csvResult != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text('קובץ שנבחר: ${_csvResult!.files.single.name}', style: TextStyle(color: Colors.green)),
-                        ),
-                      SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _showParticipantsDialog,
-                        icon: Icon(Icons.group),
-                        label: Text('ניהול משתתפים'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF3D3D3D),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        ),
-                      ),
-
-                      // Add manually
-                      SizedBox(height: 16),
-                      Text('Add participants manually:'),
-                      SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(child: _buildIconInput(_participantNameController, Icons.person, 'Name')),
-                          SizedBox(width: 10),
-                          Expanded(child: _buildIconInput(_participantPhoneController, Icons.phone, 'Phone')),
-                          SizedBox(width: 10),
-                          Container(
-                            decoration: BoxDecoration(color: Color(0xFF3D3D3D), shape: BoxShape.circle),
-                            child: IconButton(
-                              icon: Icon(Icons.add, color: Colors.white),
-                              onPressed: () async {
-                                final name = _participantNameController.text.trim();
-                                final phone = _participantPhoneController.text.trim();
-                                if (name.isEmpty || phone.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Please enter both name and phone')),
-                                  );
-                                  return;
-                                }
-                                await eventRef.collection('participants').add({
-                                  'name': name,
-                                  'phone': phone,
-                                  'addedAt': FieldValue.serverTimestamp(),
-                                });
-                                final normalized = phone.startsWith('+') ? phone : '+972${phone.substring(1)}';
-                                await eventRef.update({
-                                  'allowedParticipants': FieldValue.arrayUnion([normalized]),
-                                });
-                                _participantNameController.clear();
-                                _participantPhoneController.clear();
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Save changes
-                      SizedBox(height: 30),
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            // Update manager's metadata
-                            final updateData = <String, dynamic>{
-                              'eventName': _eventNameController.text.trim(),
-                              'eventType': _selectedEventType,
-                              'location': _locationController.text.trim(),
-                              if (_selectedDateTime != null) 'date': _selectedDateTime!.toIso8601String(),
-                            };
-
-                            // Delete removed images
-                            for (var url in _imageUrlsToRemove) {
-                              try {
-                                await FirebaseStorage.instance.refFromURL(url).delete();
-                              } catch (_) {}
-                            }
-
-                            // Upload new images
-                            final newUrls = <String>[];
-                            for (var f in _newImages) {
-                              final fn = '${DateTime.now().millisecondsSinceEpoch}_${f.name}';
-                              final ref = FirebaseStorage.instance.ref('events/${widget.eventId}/images/$fn');
-                              await ref.putFile(File(f.path));
-                              newUrls.add(await ref.getDownloadURL());
-                            }
-                            final allImages = [..._imageUrls, ...newUrls];
-                            await eventRef.update({'imageUrls': allImages});
-
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Event updated')));
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF3D3D3D),
-                            padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                          ),
-                          child: Text('Save Changes', style: TextStyle(fontSize: 18, color: Colors.white)),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -715,7 +561,6 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
     );
   }
 
-<<<<<<< HEAD
   Widget _buildTextField(String hint, TextEditingController controller) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16),
@@ -758,7 +603,7 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
       child: DropdownButtonFormField<String>(
         value: _selectedEventType,
         decoration: InputDecoration(border: InputBorder.none),
-        items: eventTypeOptions
+        items: _eventTypeOptions
             .map((type) => DropdownMenuItem(value: type, child: Text(type)))
             .toList(),
         onChanged: (val) => setState(() => _selectedEventType = val),
@@ -794,50 +639,4 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
       ],
     );
   }
-=======
-  Widget _buildTextField(String hint, TextEditingController c) => Container(
-    padding: EdgeInsets.symmetric(horizontal: 16),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
-    child: TextFormField(controller: c, decoration: InputDecoration(hintText: hint, border: InputBorder.none)),
-  );
-
-  Widget _buildIconInput(TextEditingController c, IconData icon, String hint) => Container(
-    padding: EdgeInsets.symmetric(horizontal: 16),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
-    child: Row(children: [
-      Icon(icon, color: Color(0xFF3D3D3D)),
-      SizedBox(width: 8),
-      Expanded(child: TextField(controller: c, decoration: InputDecoration(hintText: hint, border: InputBorder.none))),
-    ]),
-  );
-
-  Widget _buildDropdown() => Container(
-    padding: EdgeInsets.symmetric(horizontal: 16),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
-    child: DropdownButtonFormField<String>(
-      value: _selectedEventType,
-      decoration: InputDecoration(border: InputBorder.none),
-      items: _eventTypeOptions.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-      onChanged: (v) => setState(() => _selectedEventType = v),
-    ),
-  );
-
-  Widget _buildDatePicker() => Row(children: [
-    Expanded(
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
-        child: Text(
-          _selectedDateTime == null ? 'No Date/Time selected' : _dateFormat.format(_selectedDateTime!),
-          style: TextStyle(fontSize: 16),
-        ),
-      ),
-    ),
-    SizedBox(width: 10),
-    Container(
-      decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-      child: IconButton(icon: Icon(Icons.calendar_today, color: Color(0xFF3D3D3D)), onPressed: _pickDateTime),
-    ),
-  ]);
->>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
 }
