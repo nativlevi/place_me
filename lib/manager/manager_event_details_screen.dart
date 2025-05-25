@@ -11,7 +11,6 @@ import 'dart:convert';
 import 'package:charset_converter/charset_converter.dart';
 import '../general/guide_screen.dart';
 
-
 class ManagerDetailsUpdateScreen extends StatefulWidget {
   @override
   _ManagerDetailsUpdateScreenState createState() =>
@@ -122,7 +121,10 @@ class _ManagerDetailsUpdateScreenState
 
       print('📄 Raw CSV Content:\n$content');
 
-      final lines = content.split(RegExp(r'\r?\n')).where((line) => line.trim().isNotEmpty).toList();
+      final lines = content
+          .split(RegExp(r'\r?\n'))
+          .where((line) => line.trim().isNotEmpty)
+          .toList();
       if (lines.length < 2) return;
 
       String headerLine = lines.first;
@@ -159,7 +161,6 @@ class _ManagerDetailsUpdateScreenState
 
       // הוספת כל המשתתפים לקולקשן users
       await _addParticipantsToUsers();
-
     } catch (e) {
       print('❌ Error parsing CSV: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -171,7 +172,8 @@ class _ManagerDetailsUpdateScreenState
   Future<void> _addParticipantsToUsers() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User not logged in')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('User not logged in')));
       return;
     }
 
@@ -181,7 +183,8 @@ class _ManagerDetailsUpdateScreenState
 
         // הוספת שדות נוספים (email, password)
         final email = '${phone}@example.com'; // אפשר ליצור מייל לפי הטלפון
-        final password = 'defaultPassword'; // אפשר ליצור סיסמה ברירת מחדל או לבקש מהמשתמש למלא אותה
+        final password =
+            'defaultPassword'; // אפשר ליצור סיסמה ברירת מחדל או לבקש מהמשתמש למלא אותה
 
         // הוספה לקולקשן 'users'
         await FirebaseFirestore.instance.collection('users').doc(phone).set({
@@ -194,10 +197,12 @@ class _ManagerDetailsUpdateScreenState
         print('Added user with phone: $phone');
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Participants added successfully!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Participants added successfully!')));
     } catch (e) {
       print('Error adding participants: $e');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding participants: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error adding participants: $e')));
     }
   }
 
@@ -256,7 +261,6 @@ class _ManagerDetailsUpdateScreenState
       }
       await docRef.update({'imageUrls': imageUrls});
 
-
       // 3) העלאת CSV
       final csvPath = _csvResult?.files.single.path;
       if (csvPath != null) {
@@ -276,11 +280,33 @@ class _ManagerDetailsUpdateScreenState
 // 4) שמירת המשתתפים ושמירתם גם כ־allowed_users
       final allParticipants = [..._parsedCsv, ..._manualParticipants];
 
+      final participantPhones = allParticipants.map((p) {
+        String phone = p['phone']!.trim();
+        if (!phone.startsWith('+')) {
+          phone = '+972${phone.substring(1)}';
+        }
+        return phone;
+      }).toSet().toList();
 
+      // שמירת המערך במסמך האירוע הראשי:
+      await docRef.update({
+        'allowedParticipants': participantPhones,
+      });
       for (var p in allParticipants) {
-        await docRef.collection('participants').add(p);
-        await _addAllowedUser(p['phone']!);
+        String phone = p['phone']!.trim();
+        if (!phone.startsWith('+')) {
+          phone = '+972${phone.substring(1)}';
+        }
+
+        await docRef.collection('participants').add({
+          'name': p['name'],
+          'phone': phone,
+          'addedAt': FieldValue.serverTimestamp(),
+        });
+
+        await _addAllowedUser(phone, docRef.id);
       }
+
 
       // 5) קישור למנהל
 
@@ -301,7 +327,8 @@ class _ManagerDetailsUpdateScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Event saved successfully!')),
       );
-      Navigator.pushNamedAndRemoveUntil(context, '/manager_home', (route) => false);
+      Navigator.pushNamedAndRemoveUntil(
+          context, '/manager_home', (route) => false);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error saving event: $e')),
@@ -311,20 +338,22 @@ class _ManagerDetailsUpdateScreenState
     }
   }
 
-  Future<void> _addAllowedUser(String phone) async {
-    // אם אין + ברישום – ננרמל ל־+972...
-    final normalized =
-        phone.startsWith('+') ? phone : '+972${phone.substring(1)}';
+  Future<void> _addAllowedUser(String phone, String eventId) async {
+    final docRef = FirebaseFirestore.instance.collection('events').doc(eventId);
 
+    await docRef.update({
+      'allowedParticipants': FieldValue.arrayUnion([phone]),
+    });
 
     await FirebaseFirestore.instance
         .collection('allowed_users')
-        .doc(normalized)
+        .doc(phone)
         .set({
-      'phone': normalized,
+      'phone': phone,
       'addedAt': FieldValue.serverTimestamp(),
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -378,7 +407,7 @@ class _ManagerDetailsUpdateScreenState
                     ),
                   ),
                   validator: (v) =>
-                      v == null || v.isEmpty ? 'נא למלא שם אירוע' : null,
+                  v == null || v.isEmpty ? 'נא למלא שם אירוע' : null,
                 ),
                 SizedBox(height: 20),
 
@@ -387,7 +416,7 @@ class _ManagerDetailsUpdateScreenState
                   controller: _locationCtrl,
                   decoration: InputDecoration(
                     prefixIcon:
-                        Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
+                    Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
                     hintText: 'Enter Location',
                     filled: true,
                     fillColor: Colors.white,
@@ -397,7 +426,7 @@ class _ManagerDetailsUpdateScreenState
                     ),
                   ),
                   validator: (v) =>
-                      v == null || v.isEmpty ? 'נא למלא מיקום' : null,
+                  v == null || v.isEmpty ? 'נא למלא מיקום' : null,
                 ),
                 SizedBox(height: 20),
 
@@ -475,19 +504,19 @@ class _ManagerDetailsUpdateScreenState
                     runSpacing: 10,
                     children: _eventImages
                         .map((f) => Stack(
-                              children: [
-                                Image.file(f, width: 100, height: 100),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _eventImages.remove(f)),
-                                    child: Icon(Icons.close, color: Colors.red),
-                                  ),
-                                ),
-                              ],
-                            ))
+                      children: [
+                        Image.file(f, width: 100, height: 100),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () =>
+                                setState(() => _eventImages.remove(f)),
+                            child: Icon(Icons.close, color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ))
                         .toList(),
                   ),
                 ],
@@ -508,7 +537,8 @@ class _ManagerDetailsUpdateScreenState
                       context,
                       MaterialPageRoute(
                         builder: (context) => GuideScreen(
-                          section: 'Upload Participant List', // החלק הספציפי של ההנחיות
+                          section:
+                          'Upload Participant List', // החלק הספציפי של ההנחיות
                         ),
                       ),
                     );
@@ -558,7 +588,7 @@ class _ManagerDetailsUpdateScreenState
                         controller: _participantNameCtrl,
                         decoration: InputDecoration(
                           prefixIcon:
-                              Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                          Icon(Icons.person, color: Color(0xFF3D3D3D)),
                           hintText: 'Name',
                           filled: true,
                           fillColor: Colors.white,
@@ -575,7 +605,7 @@ class _ManagerDetailsUpdateScreenState
                         controller: _participantPhoneCtrl,
                         decoration: InputDecoration(
                           prefixIcon:
-                              Icon(Icons.phone, color: Color(0xFF3D3D3D)),
+                          Icon(Icons.phone, color: Color(0xFF3D3D3D)),
                           hintText: 'Phone',
                           filled: true,
                           fillColor: Colors.white,
@@ -612,29 +642,29 @@ class _ManagerDetailsUpdateScreenState
                     onPressed: _isSaving
                         ? null
                         : () async {
-                            print('🔘 Submit pressed');
-                            await _saveEvent();
-                          },
+                      print('🔘 Submit pressed');
+                      await _saveEvent();
+                    },
                     child: _isSaving
                         ? SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
                         : Text(
-                            'Submit',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                      'Submit',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF3D3D3D),
                       padding:
-                          EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                      EdgeInsets.symmetric(vertical: 15, horizontal: 100),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),

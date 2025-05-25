@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../firebase/firebase_options.dart';
@@ -22,7 +23,18 @@ Future<void> main() async {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -30,30 +42,31 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         initialRoute: '/splash',
         routes: {
-          '/splash': (context) => SplashScreen(),
-          '/login': (context) => LoginScreen(),
-          '/guide': (context) => GuideScreen(section: '',),
-          '/manager_login': (context) => ManagerLoginScreen(),
-          '/participant_login': (context) => ParticipantLoginScreen(),
-          '/loading': (context) => LoadingScreen(
-                routeName: '',
-              ),
-          '/manager_signup': (context) => ManagerRegisterScreen(),
-          '/participant_signup': (context) => ParticipantSignupScreen(),
-          '/manager_dashboard': (context) => ManagerEventTypeScreen(),
-          '/manager_event_type_screen': (context) => ManagerEventTypeScreen(),
-          '/event_details': (context) => ManagerDetailsUpdateScreen(),
-          '/seating_preferences': (context) =>
-              SeatingPreferencesScreen(eventType: 'Classroom/Workshop', phone: '', eventId: null,),
-          '/add_participant': (context) => AddParticipantScreen(),
-          '/manager_home': (context) => ManagerHomeScreen(),
-
+          '/splash':            (_) => SplashScreen(),
+          '/login':             (_) => LoginScreen(),
+          '/guide':             (_) => GuideScreen(section: ''),
+          '/manager_login':     (_) => ManagerLoginScreen(),
+          '/participant_login': (_) => ParticipantLoginScreen(),
+          '/loading':           (_) => LoadingScreen(routeName: ''),
+          '/manager_signup':    (_) => ManagerRegisterScreen(),
+          '/participant_signup':(_) => ParticipantSignupScreen(),
+          '/manager_dashboard': (_) => ManagerEventTypeScreen(),
+          '/manager_event_type_screen': (_) => ManagerEventTypeScreen(),
+          '/event_details':     (_) => ManagerDetailsUpdateScreen(),
+          '/seating_preferences': (_) => SeatingPreferencesScreen(
+            eventType: 'Classroom/Workshop',
+            phone: '',
+            eventId: null,
+          ),
+          '/add_participant':   (_) => AddParticipantScreen(),
+          '/manager_home':      (_) => ManagerHomeScreen(),
         },
       ),
     );
   }
 }
 
+/// This is your landing login screen
 class LoginScreen extends StatelessWidget {
   void navigateToManagerLogin(BuildContext context) {
     Navigator.pushNamed(context, '/manager_login');
@@ -119,7 +132,7 @@ class LoginScreen extends StatelessWidget {
                   SizedBox(height: 50.0),
                   GestureDetector(
                     onTap: () => navigateToManagerLogin(context),
-                    child: buildCustomButton('Manager   '),
+                    child: buildCustomButton('Manager'),
                   ),
                   SizedBox(height: 10.0),
                   GestureDetector(
