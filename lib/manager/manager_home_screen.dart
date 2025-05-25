@@ -65,6 +65,8 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
         .doc(currentUser!.uid)
         .collection('events');
 
+    final eventsRef = FirebaseFirestore.instance.collection('events');
+
     return Scaffold(
       backgroundColor: const Color(0xFFFD0DDD0),
       appBar: AppBar(
@@ -119,7 +121,8 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
         child: StreamBuilder<QuerySnapshot>(
           stream: managerEventsRef.snapshots(),
           builder: (context, snapshot) {
-            if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+            if (!snapshot.hasData)
+              return Center(child: CircularProgressIndicator());
             List<QueryDocumentSnapshot> docs = snapshot.data!.docs;
             final sortedDocs = sortDocs(List.from(docs), _sortOption);
 
@@ -135,17 +138,28 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                 final eventName = data['eventName'] ?? 'No Event Name';
                 final eventType = data['eventType'] ?? 'No Event Type';
                 final location = data['location'] ?? 'No Location';
-                final dateString = data['date'] as String?;
+                final rawDate = (data['date'] as String?)?.trim();
+                final rawTime = (data['time'] as String?)?.trim();
 
                 String displayDateTime = 'No Date/Time';
-                if (dateString != null && dateString.isNotEmpty) {
+
+                if (rawDate != null && rawDate.isNotEmpty) {
+                  final dateOnly = rawDate.split('T').first;
+                  final timeOnly = (rawTime != null && rawTime.isNotEmpty)
+                      ? rawTime
+                      : '00:00';
+                  final combined = '$dateOnly $timeOnly';
                   try {
-                    final parsed = DateTime.parse(dateString);
-                    displayDateTime = _dateTimeFormat.format(parsed);
-                  } catch (_) {
-                    displayDateTime = 'Invalid date';
+                    final parsed =
+                        DateFormat('yyyy-MM-dd HH:mm').parseStrict(combined);
+                    displayDateTime =
+                        DateFormat('MMM d, yyyy HH:mm').format(parsed);
+                  } catch (e) {
+                    print('❌ Parse failed for "$combined": $e');
+                    displayDateTime = 'Invalid date/time';
                   }
                 }
+// אחרת נשאיר displayDateTime כ־'No Date/Time'
 
                 return GestureDetector(
                   onTap: () {
@@ -223,13 +237,16 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                               context: context,
                               builder: (_) => AlertDialog(
                                 title: Text('Delete Event'),
-                                content: Text('Are you sure you want to delete this event?'),
+                                content: Text(
+                                    'Are you sure you want to delete this event?'),
                                 actions: [
                                   TextButton(
-                                      onPressed: () => Navigator.pop(context, false),
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
                                       child: Text('Cancel')),
                                   TextButton(
-                                      onPressed: () => Navigator.pop(context, true),
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
                                       child: Text('Delete')),
                                 ],
                               ),
@@ -250,9 +267,12 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                                   .delete();
 
                               // מחיקת התיקייה כולה מ־Firebase Storage
-                              final storageRef = FirebaseStorage.instance.ref().child('events/$eventDocId');
+                              final storageRef = FirebaseStorage.instance
+                                  .ref()
+                                  .child('events/$eventDocId');
                               try {
-                                final ListResult items = await storageRef.listAll();
+                                final ListResult items =
+                                    await storageRef.listAll();
 
                                 for (var item in items.items) {
                                   await item.delete();
@@ -265,18 +285,20 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                                   }
                                 }
 
-                                print('🗑️ Deleted all files in events/$eventDocId');
+                                print(
+                                    '🗑️ Deleted all files in events/$eventDocId');
                               } catch (e) {
-                                print('❗ Failed to delete storage contents: $e');
+                                print(
+                                    '❗ Failed to delete storage contents: $e');
                               }
-
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Event deleted')),
                               );
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error deleting event: $e')),
+                                SnackBar(
+                                    content: Text('Error deleting event: $e')),
                               );
                             }
                           },

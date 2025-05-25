@@ -166,9 +166,20 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
                       final event = finalList[index];
                       final eventName = event['eventName'] ?? 'Unnamed Event';
                       String rawDateString = event['date'] ?? '';
+                      String rawTimeString = event['time'] ?? '';
                       DateTime parsedDate = DateTime.parse(rawDateString);
                       String formattedDate =
-                      DateFormat('MMM d, yyyy').format(parsedDate);
+                          DateFormat('MMM d, yyyy').format(parsedDate);
+                      String formattedTime;
+                      try {
+                        final parts = rawTimeString.split(':');
+                        final h = int.parse(parts[0]);
+                        final m = int.parse(parts[1]);
+                        final dt = DateTime(0, 0, 0, h, m);
+                        formattedTime = DateFormat('HH:mm').format(dt);
+                      } catch (_) {
+                        formattedTime = '00:00';
+                      }
                       final location = event['location'] ?? '';
                       final eventType = event['eventType'] ?? '';
                       final status = event['status'] ?? 'open';
@@ -187,11 +198,10 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => SeatingPreferencesScreen(
-                                  eventId: event['id'],
-                                  eventType: eventType,
-                                  phone: widget.phone,      // <-- העברת ה-phone
-
-                                ),
+                                    eventId: event['id'],
+                                    eventType: eventType,
+                                    phone: widget.phone, // <-- העברת ה-phone
+                                    eventName: event['eventName']),
                               ),
                             );
                           }
@@ -234,7 +244,7 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
                                             color: Color(0xFF727D73), size: 16),
                                         const SizedBox(width: 5),
                                         Text(
-                                          formattedDate,
+                                          '$formattedDate   $formattedTime',
                                           style: const TextStyle(
                                             fontFamily: 'Source Sans Pro',
                                             fontSize: 16,

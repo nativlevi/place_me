@@ -101,21 +101,35 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
       body: FutureBuilder<DocumentSnapshot>(
         future: docRef.get(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-          if (!snapshot.data!.exists) return Center(child: Text('Event does not exist'));
+          if (!snapshot.hasData)
+            return Center(child: CircularProgressIndicator());
+          if (!snapshot.data!.exists)
+            return Center(child: Text('Event does not exist'));
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final eventDocId = data['ref'];
 
           // INIT
-          if (_eventNameController.text.isEmpty) _eventNameController.text = data['eventName'] ?? '';
-          if (_locationController.text.isEmpty) _locationController.text = data['location'] ?? '';
-          if (_selectedEventType == null) _selectedEventType = data['eventType'] ?? eventTypeOptions.first;
-          if (_selectedDateTime == null && data['date'] != null) {
+          if (_eventNameController.text.isEmpty)
+            _eventNameController.text = data['eventName'] ?? '';
+          if (_locationController.text.isEmpty)
+            _locationController.text = data['location'] ?? '';
+          if (_selectedEventType == null)
+            _selectedEventType = data['eventType'] ?? eventTypeOptions.first;
+          final rawDate = data['date'] as String?;
+          final rawTime = data['time'] as String?; // תופס גם את השעה
+          if (_selectedDateTime == null && rawDate != null) {
             try {
-              _selectedDateTime = DateTime.parse(data['date']);
-            } catch (_) {
-              _selectedDateTime = DateTime.now();
+              // אם אין time, נניח 00:00
+              final timePart =
+                  (rawTime != null && rawTime.isNotEmpty) ? rawTime : '00:00';
+              // נבנה מחרוזת כמו "2025-05-23 14:30"
+              final combined = '$rawDate $timePart';
+              _selectedDateTime =
+                  DateFormat('yyyy-MM-dd HH:mm').parseStrict(combined);
+            } catch (e) {
+              // נ fallback רק ל־date בלי שעה
+              _selectedDateTime = DateTime.parse(rawDate);
             }
           }
           if (_imageUrls.isEmpty && data['imageUrls'] != null) {
@@ -141,7 +155,8 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
           }
 
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
             child: SingleChildScrollView(
               child: Form(
                 key: _formKey,
@@ -156,30 +171,32 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                     SizedBox(height: 16),
                     _buildTextField('Enter Location', _locationController),
                     SizedBox(height: 16),
-                    Text('Event Images:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Event Images:',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                     SizedBox(height: 10),
                     Wrap(
                       spacing: 10,
                       children: [
                         ..._imageUrls.map((url) => Stack(
-                          children: [
-                            Image.network(url, width: 100, height: 100),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () => setState(() {
-                                  _imageUrls.remove(url);
-                                  _imageUrlsToRemove.add(url);
-                                }),
-                                child: Icon(Icons.close, color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        )),
+                              children: [
+                                Image.network(url, width: 100, height: 100),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: () => setState(() {
+                                      _imageUrls.remove(url);
+                                      _imageUrlsToRemove.add(url);
+                                    }),
+                                    child: Icon(Icons.close, color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            )),
 
                         // Show newly added images
-                        ..._newImages.map((f) => Image.file(File(f.path), width: 100, height: 100)),
+                        ..._newImages.map((f) =>
+                            Image.file(File(f.path), width: 100, height: 100)),
                       ],
                     ),
                     ElevatedButton.icon(
@@ -197,9 +214,13 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                     SizedBox(height: 10),
                     Row(
                       children: [
-                        Expanded(child: _buildIconInput(_participantNameController, Icons.person, 'Name')),
+                        Expanded(
+                            child: _buildIconInput(_participantNameController,
+                                Icons.person, 'Name')),
                         SizedBox(width: 10),
-                        Expanded(child: _buildIconInput(_participantPhoneController, Icons.phone, 'Phone')),
+                        Expanded(
+                            child: _buildIconInput(_participantPhoneController,
+                                Icons.phone, 'Phone')),
                         SizedBox(width: 10),
                         Container(
                           decoration: BoxDecoration(
@@ -209,20 +230,32 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                           child: IconButton(
                             icon: Icon(Icons.add, color: Colors.white),
                             onPressed: () async {
-                              final name = _participantNameController.text.trim();
-                              final phone = _participantPhoneController.text.trim();
+                              final name =
+                                  _participantNameController.text.trim();
+                              final phone =
+                                  _participantPhoneController.text.trim();
                               if (name.isEmpty || phone.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Please enter both name and phone number')),
+                                  SnackBar(
+                                      content: Text(
+                                          'Please enter both name and phone number')),
                                 );
                                 return;
                               }
-                              final eventRef = FirebaseFirestore.instance.collection('events').doc(eventDocId);
+                              final eventRef = FirebaseFirestore.instance
+                                  .collection('events')
+                                  .doc(eventDocId);
                               await eventRef.collection('participants').add({
                                 'name': name,
                                 'phone': phone,
                                 'addedAt': FieldValue.serverTimestamp(),
                               });
+
+                              await eventRef.update({
+                                'allowedParticipants':
+                                    FieldValue.arrayUnion([phone]),
+                              });
+
                               _participantNameController.clear();
                               _participantPhoneController.clear();
                             },
@@ -234,24 +267,24 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
 
                     // Display participants list with delete button
                     ..._participants.map((p) => ListTile(
-                      title: Text(p['name']),
-                      subtitle: Text(p['phone']),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () async {
-                          await FirebaseFirestore.instance
-                              .collection('events')
-                              .doc(eventDocId)
-                              .collection('participants')
-                              .doc(p['docId'])
-                              .delete();
+                          title: Text(p['name']),
+                          subtitle: Text(p['phone']),
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+                              await FirebaseFirestore.instance
+                                  .collection('events')
+                                  .doc(eventDocId)
+                                  .collection('participants')
+                                  .doc(p['docId'])
+                                  .delete();
 
-                          setState(() {
-                            _participants.remove(p);
-                          });
-                        },
-                      ),
-                    )),
+                              setState(() {
+                                _participants.remove(p);
+                              });
+                            },
+                          ),
+                        )),
 
                     SizedBox(height: 30),
                     Center(
@@ -261,17 +294,29 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                             'eventName': _eventNameController.text.trim(),
                             'eventType': _selectedEventType,
                             'location': _locationController.text.trim(),
-                            if (_selectedDateTime != null) 'date': _selectedDateTime!.toIso8601String(),
+                            'date': _selectedDateTime != null
+                                ? DateFormat('yyyy-MM-dd')
+                                    .format(_selectedDateTime!)
+                                : null,
                           };
+
+                          if (_selectedDateTime != null) {
+                            final formattedTime =
+                                DateFormat('HH:mm').format(_selectedDateTime!);
+                            updateData['time'] = formattedTime;
+                          }
 
                           await docRef.update(updateData);
 
-                          final eventRef = FirebaseFirestore.instance.collection('events').doc(eventDocId);
+                          final eventRef = FirebaseFirestore.instance
+                              .collection('events')
+                              .doc(eventDocId);
 
                           // Delete removed images
                           for (var url in _imageUrlsToRemove) {
                             try {
-                              final ref = FirebaseStorage.instance.refFromURL(url);
+                              final ref =
+                                  FirebaseStorage.instance.refFromURL(url);
                               await ref.delete();
                             } catch (_) {}
                           }
@@ -279,7 +324,8 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                           // Upload new images
                           final newUrls = <String>[];
                           for (var file in _newImages) {
-                            final filename = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+                            final filename =
+                                '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
                             final ref = FirebaseStorage.instance
                                 .ref('events/$eventDocId/images/$filename');
                             await ref.putFile(File(file.path));
@@ -288,17 +334,23 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                           }
 
                           final updatedImages = [..._imageUrls, ...newUrls];
-                          await eventRef.update({...updateData, 'imageUrls': updatedImages});
+                          await eventRef.update(
+                              {...updateData, 'imageUrls': updatedImages});
 
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Event updated')));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Event updated')));
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF3D3D3D),
-                          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                          padding: EdgeInsets.symmetric(
+                              vertical: 15, horizontal: 100),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30)),
                         ),
-                        child: Text('Save Changes', style: TextStyle(fontSize: 18, color: Colors.white)),
+                        child: Text('Save Changes',
+                            style:
+                                TextStyle(fontSize: 18, color: Colors.white)),
                       ),
                     ),
                   ],
@@ -314,7 +366,8 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
   Widget _buildTextField(String hint, TextEditingController controller) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(30)),
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(hintText: hint, border: InputBorder.none),
@@ -322,10 +375,12 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
     );
   }
 
-  Widget _buildIconInput(TextEditingController controller, IconData icon, String hint) {
+  Widget _buildIconInput(
+      TextEditingController controller, IconData icon, String hint) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(30)),
       child: Row(
         children: [
           Icon(icon, color: Color(0xFF3D3D3D)),
@@ -333,7 +388,8 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
           Expanded(
             child: TextField(
               controller: controller,
-              decoration: InputDecoration(hintText: hint, border: InputBorder.none),
+              decoration:
+                  InputDecoration(hintText: hint, border: InputBorder.none),
             ),
           ),
         ],
@@ -344,11 +400,14 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
   Widget _buildDropdown() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(30)),
       child: DropdownButtonFormField<String>(
         value: _selectedEventType,
         decoration: InputDecoration(border: InputBorder.none),
-        items: eventTypeOptions.map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
+        items: eventTypeOptions
+            .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+            .toList(),
         onChanged: (val) => setState(() => _selectedEventType = val),
       ),
     );
@@ -360,7 +419,8 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
         Expanded(
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
+            decoration: BoxDecoration(
+                color: Colors.white, borderRadius: BorderRadius.circular(30)),
             child: Text(
               _selectedDateTime == null
                   ? 'No Date/Time selected'
@@ -371,7 +431,8 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
         ),
         SizedBox(width: 10),
         Container(
-          decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          decoration:
+              BoxDecoration(color: Colors.white, shape: BoxShape.circle),
           child: IconButton(
             icon: Icon(Icons.calendar_today, color: Color(0xFF3D3D3D)),
             onPressed: _pickDateTime,

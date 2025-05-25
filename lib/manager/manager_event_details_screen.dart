@@ -11,7 +11,6 @@ import 'dart:convert';
 import 'package:charset_converter/charset_converter.dart';
 import '../general/guide_screen.dart';
 
-
 class ManagerDetailsUpdateScreen extends StatefulWidget {
   @override
   _ManagerDetailsUpdateScreenState createState() =>
@@ -122,7 +121,10 @@ class _ManagerDetailsUpdateScreenState
 
       print('📄 Raw CSV Content:\n$content');
 
-      final lines = content.split(RegExp(r'\r?\n')).where((line) => line.trim().isNotEmpty).toList();
+      final lines = content
+          .split(RegExp(r'\r?\n'))
+          .where((line) => line.trim().isNotEmpty)
+          .toList();
       if (lines.length < 2) return;
 
       String headerLine = lines.first;
@@ -159,7 +161,6 @@ class _ManagerDetailsUpdateScreenState
 
       // הוספת כל המשתתפים לקולקשן users
       await _addParticipantsToUsers();
-
     } catch (e) {
       print('❌ Error parsing CSV: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -171,7 +172,8 @@ class _ManagerDetailsUpdateScreenState
   Future<void> _addParticipantsToUsers() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User not logged in')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('User not logged in')));
       return;
     }
 
@@ -181,7 +183,8 @@ class _ManagerDetailsUpdateScreenState
 
         // הוספת שדות נוספים (email, password)
         final email = '${phone}@example.com'; // אפשר ליצור מייל לפי הטלפון
-        final password = 'defaultPassword'; // אפשר ליצור סיסמה ברירת מחדל או לבקש מהמשתמש למלא אותה
+        final password =
+            'defaultPassword'; // אפשר ליצור סיסמה ברירת מחדל או לבקש מהמשתמש למלא אותה
 
         // הוספה לקולקשן 'users'
         await FirebaseFirestore.instance.collection('users').doc(phone).set({
@@ -194,10 +197,12 @@ class _ManagerDetailsUpdateScreenState
         print('Added user with phone: $phone');
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Participants added successfully!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Participants added successfully!')));
     } catch (e) {
       print('Error adding participants: $e');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding participants: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error adding participants: $e')));
     }
   }
 
@@ -232,9 +237,11 @@ class _ManagerDetailsUpdateScreenState
         'eventType': _eventType,
         'eventName': _nameCtrl.text.trim(),
         'location': _locationCtrl.text.trim(),
-        'date': _selectedDate?.toIso8601String(),
+        'date': _selectedDate != null
+            ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
+            : null,
         'time': _selectedTime != null
-            ? '${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
+            ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
             : null,
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -256,7 +263,6 @@ class _ManagerDetailsUpdateScreenState
       }
       await docRef.update({'imageUrls': imageUrls});
 
-
       // 3) העלאת CSV
       final csvPath = _csvResult?.files.single.path;
       if (csvPath != null) {
@@ -276,7 +282,13 @@ class _ManagerDetailsUpdateScreenState
 // 4) שמירת המשתתפים ושמירתם גם כ־allowed_users
       final allParticipants = [..._parsedCsv, ..._manualParticipants];
 
+      final participantPhones =
+          allParticipants.map((p) => p['phone']!).toSet().toList();
 
+      // שמירת המערך במסמך האירוע הראשי:
+      await docRef.update({
+        'allowedParticipants': participantPhones,
+      });
       for (var p in allParticipants) {
         await docRef.collection('participants').add(p);
         await _addAllowedUser(p['phone']!);
@@ -294,14 +306,20 @@ class _ManagerDetailsUpdateScreenState
         'eventName': _nameCtrl.text.trim(),
         'eventType': _eventType,
         'location': _locationCtrl.text.trim(),
-        'date': _selectedDate?.toIso8601String(),
+        'date': _selectedDate != null
+            ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
+            : null,
+        'time': _selectedTime != null
+            ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
+            : null,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Event saved successfully!')),
       );
-      Navigator.pushNamedAndRemoveUntil(context, '/manager_home', (route) => false);
+      Navigator.pushNamedAndRemoveUntil(
+          context, '/manager_home', (route) => false);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error saving event: $e')),
@@ -315,7 +333,6 @@ class _ManagerDetailsUpdateScreenState
     // אם אין + ברישום – ננרמל ל־+972...
     final normalized =
         phone.startsWith('+') ? phone : '+972${phone.substring(1)}';
-
 
     await FirebaseFirestore.instance
         .collection('allowed_users')
@@ -508,7 +525,8 @@ class _ManagerDetailsUpdateScreenState
                       context,
                       MaterialPageRoute(
                         builder: (context) => GuideScreen(
-                          section: 'Upload Participant List', // החלק הספציפי של ההנחיות
+                          section:
+                              'Upload Participant List', // החלק הספציפי של ההנחיות
                         ),
                       ),
                     );

@@ -32,7 +32,9 @@ class MyApp extends StatelessWidget {
         routes: {
           '/splash': (context) => SplashScreen(),
           '/login': (context) => LoginScreen(),
-          '/guide': (context) => GuideScreen(section: '',),
+          '/guide': (context) => GuideScreen(
+                section: '',
+              ),
           '/manager_login': (context) => ManagerLoginScreen(),
           '/participant_login': (context) => ParticipantLoginScreen(),
           '/loading': (context) => LoadingScreen(
@@ -43,11 +45,14 @@ class MyApp extends StatelessWidget {
           '/manager_dashboard': (context) => ManagerEventTypeScreen(),
           '/manager_event_type_screen': (context) => ManagerEventTypeScreen(),
           '/event_details': (context) => ManagerDetailsUpdateScreen(),
-          '/seating_preferences': (context) =>
-              SeatingPreferencesScreen(eventType: 'Classroom/Workshop', phone: '', eventId: null,),
+          '/seating_preferences': (context) => SeatingPreferencesScreen(
+                eventType: 'Classroom/Workshop',
+                phone: '',
+                eventId: 'temp',
+                eventName: 'temp',
+              ),
           '/add_participant': (context) => AddParticipantScreen(),
           '/manager_home': (context) => ManagerHomeScreen(),
-
         },
       ),
     );
