@@ -6,7 +6,6 @@ import 'manager_event_type_screen.dart';
 import 'manager_home_screen.dart';
 import 'manager_signup.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 class ManagerLoginScreen extends StatefulWidget {
   @override
@@ -14,6 +13,7 @@ class ManagerLoginScreen extends StatefulWidget {
 }
 
 class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
+
   // פונקציה להתחברות דרך Google
   Future<void> signInWithGoogle() async {
     try {
@@ -41,31 +41,6 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
     } catch (e) {
       print('Error with Google Sign-In: $e');
       // אפשר להציג הודעה למשתמש במידת הצורך
-    }
-  }
-
-  // פונקציה להתחברות דרך Facebook
-  Future<void> signInWithFacebook() async {
-    try {
-      final LoginResult result = await FacebookAuth.instance.login();
-      if (result.status == LoginStatus.success) {
-        final AccessToken accessToken = result.accessToken!;
-        final facebookAuthCredential =
-        FacebookAuthProvider.credential(accessToken.tokenString);
-
-        // התחברות לפיירבייס
-        await FirebaseAuth.instance.signInWithCredential(facebookAuthCredential);
-
-        // מעבר למסך הבא לאחר התחברות מוצלחת
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ManagerHomeScreen()),
-        );
-      } else {
-        print('Facebook login failed: ${result.status}');
-      }
-    } catch (e) {
-      print('Error with Facebook Sign-In: $e');
     }
   }
 
@@ -327,11 +302,6 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                     GestureDetector(
                       onTap: () => signInWithGoogle(),
                       child: Image.asset('images/google.png', height: 35),
-                    ),
-                    const SizedBox(width: 25),
-                    GestureDetector(
-                      onTap: () => signInWithFacebook(),
-                      child: Image.asset('images/facebook.png', height: 35),
                     ),
                   ],
                 ),

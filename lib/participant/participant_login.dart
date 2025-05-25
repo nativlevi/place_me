@@ -46,7 +46,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
           _errorMessage = "User not found. Please sign up first.";
         });
       } else {
-        final storedPassword = docSnapshot.data()?["Password"];
+        final storedPassword = docSnapshot.data()?["password"];
         if (storedPassword == passwordController.text.trim()) {
           // אם הסיסמה תואמת, מעבר למסך האירועים
           Navigator.pushReplacement(
@@ -192,6 +192,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                 const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
+<<<<<<< HEAD
                     // Navigator.push(
                     //   context,
                     //   MaterialPageRoute(
@@ -202,6 +203,14 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                     //     ),
                     //   ),
                     // );
+=======
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ParticipantResetPasswordScreen(),
+                      ),
+                    );
+>>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
                   },
                   child: Align(
                     alignment: Alignment.center,
@@ -214,6 +223,8 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                     ),
                   ),
                 ),
+
+
                 const SizedBox(height: 20),
                 if (_errorMessage != null)
                   Padding(
