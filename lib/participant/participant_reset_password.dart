@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-
-=======
 // lib/participant/participant_reset_password_screen.dart
 
 import 'package:flutter/material.dart';
@@ -20,7 +17,7 @@ class _ParticipantResetPasswordScreenState
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   bool _isLoading = false;
-  String? _message;      // גם הודעות שגיאה וגם הצלחה
+  String? _message; // גם הודעות שגיאה וגם הצלחה
 
   @override
   void dispose() {
@@ -44,10 +41,8 @@ class _ParticipantResetPasswordScreenState
 
     try {
       // שליפה מה־Firestore
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(phone)
-          .get();
+      final doc =
+          await FirebaseFirestore.instance.collection('users').doc(phone).get();
 
       if (!doc.exists) {
         setState(() => _message = 'User not found');
@@ -59,8 +54,8 @@ class _ParticipantResetPasswordScreenState
           // שליחת המייל לשחזור סיסמה
           await FirebaseAuth.instance
               .sendPasswordResetEmail(email: recoveryEmail);
-          setState(() =>
-          _message = 'Password reset link sent to $recoveryEmail');
+          setState(
+              () => _message = 'Password reset link sent to $recoveryEmail');
         }
       }
     } catch (e) {
@@ -88,7 +83,6 @@ class _ParticipantResetPasswordScreenState
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-
             Form(
               key: _formKey,
               child: TextFormField(
@@ -112,23 +106,21 @@ class _ParticipantResetPasswordScreenState
                 },
               ),
             ),
-
             const SizedBox(height: 24),
             _isLoading
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
-              onPressed: _resetPassword,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3D3D3D),
-                padding: const EdgeInsets.symmetric(
-                    vertical: 15, horizontal: 60),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              child: const Text('Send Reset Email'),
-            ),
-
+                    onPressed: _resetPassword,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3D3D3D),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 15, horizontal: 60),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text('Send Reset Email'),
+                  ),
             if (_message != null) ...[
               const SizedBox(height: 20),
               Text(
@@ -136,7 +128,7 @@ class _ParticipantResetPasswordScreenState
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: _message!.startsWith('Error') ||
-                      _message == 'User not found'
+                          _message == 'User not found'
                       ? Colors.red
                       : Colors.green,
                 ),
@@ -148,4 +140,3 @@ class _ParticipantResetPasswordScreenState
     );
   }
 }
->>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa

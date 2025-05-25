@@ -192,25 +192,12 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                 const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
-<<<<<<< HEAD
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => ParticipantResetPasswordScreen(
-                    //       verificationId: verificationId, // העבר את ה-verificationId כאן
-                    //       phoneNumber: phoneNumber,
-                    //       email: '',         // העבר את ה-phoneNumber כאן
-                    //     ),
-                    //   ),
-                    // );
-=======
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => ParticipantResetPasswordScreen(),
                       ),
                     );
->>>>>>> e0d17b9fb2fddfaef98b3bc071b4e0078d0e4caa
                   },
                   child: Align(
                     alignment: Alignment.center,
@@ -223,8 +210,6 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                     ),
                   ),
                 ),
-
-
                 const SizedBox(height: 20),
                 if (_errorMessage != null)
                   Padding(
