@@ -54,6 +54,9 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final normalizedPhone = widget.phone.startsWith('+')
+        ? widget.phone
+        : '+972${widget.phone.substring(1)}';
     return Scaffold(
       backgroundColor: const Color(0xFFFD0DDD0), // רקע ירוק בהיר
       appBar: AppBar(
@@ -106,7 +109,7 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('events')
-                    .where('allowedParticipants', arrayContains: widget.phone)
+                    .where('allowedParticipants', arrayContains: normalizedPhone)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
