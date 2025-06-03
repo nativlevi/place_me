@@ -6,6 +6,7 @@ import 'manager_event_type_screen.dart';
 import 'manager_home_screen.dart';
 import 'manager_signup.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:place_me/general/validators.dart';
 
 class ManagerLoginScreen extends StatefulWidget {
   @override
@@ -13,7 +14,6 @@ class ManagerLoginScreen extends StatefulWidget {
 }
 
 class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
-
   // פונקציה להתחברות דרך Google
   Future<void> signInWithGoogle() async {
     try {
@@ -23,7 +23,8 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
         return;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
@@ -60,14 +61,16 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
     });
 
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
       if (!userCredential.user!.emailVerified) {
         setState(() {
-          _errorMessage = 'Your email is not verified. Please verify your email.';
+          _errorMessage =
+              'Your email is not verified. Please verify your email.';
         });
         await FirebaseAuth.instance.signOut();
       } else {
@@ -128,7 +131,8 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ManagerRegisterScreen()),
+                          MaterialPageRoute(
+                              builder: (context) => ManagerRegisterScreen()),
                         );
                       },
                       child: Text(
@@ -148,69 +152,59 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                   padding: const EdgeInsets.all(8.0),
                   child: Center(
                     child: TextFormField(
-                      controller: emailController,
+                        controller: emailController,
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.person,
+                              color: Color(0xFF3D3D3D)),
+                          hintText: 'EMAIL',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        validator: validateEmail),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                      controller: passwordController,
+                      obscureText: !_isPasswordVisible,
                       decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.person, color: Color(0xFF3D3D3D)),
-                        hintText: 'EMAIL',
+                        prefixIcon:
+                            const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
+                        hintText: 'PASSWORD',
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30.0),
                           borderSide: BorderSide.none,
                         ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: passwordController,
-                    obscureText: !_isPasswordVisible,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.lock, color: Color(0xFF3D3D3D)),
-                      hintText: 'PASSWORD',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30.0),
-                        borderSide: BorderSide.none,
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                          color: const Color(0xFF3D3D3D),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: const Color(0xFF3D3D3D),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
                       ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
-                  ),
+                      validator: validatePassword),
                 ),
                 const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => ForgotPasswordScreen()),
                     );
                   },
                   child: Align(
@@ -242,27 +236,28 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3D3D3D),
                     disabledBackgroundColor: const Color(0xFF3D3D3D),
-                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 100),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
                   ),
                   child: _isLoading
                       ? SizedBox(
-                    height: 50,
-                    width: 50,
-                    child: Lottie.network(
-                      'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
-                    ),
-                  )
+                          height: 50,
+                          width: 50,
+                          child: Lottie.network(
+                            'https://lottie.host/86d6dc6e-3e3d-468c-8bc6-2728590bb291/HQPr260dx6.json',
+                          ),
+                        )
                       : const Text(
-                    'SIGN IN',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                          'SIGN IN',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 25),
                 // Divider and "Or continue with" text

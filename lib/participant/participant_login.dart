@@ -4,6 +4,7 @@ import 'package:place_me/participant/participant_reset_password.dart';
 import 'participant_events_screen.dart';
 import 'participant_signup.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:place_me/general/validators.dart';
 
 class ParticipantLoginScreen extends StatefulWidget {
   @override
@@ -144,15 +145,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                       borderSide: BorderSide.none,
                     ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your phone number';
-                    }
-                    if (!RegExp(r'^\+?\d{10,15}$').hasMatch(value)) {
-                      return 'Enter a valid phone number';
-                    }
-                    return null;
-                  },
+                  validator: validatePhone,
                 ),
                 const SizedBox(height: 15),
                 TextFormField(
@@ -182,12 +175,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                       },
                     ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
+                  validator: validatePassword,
                 ),
                 const SizedBox(height: 10),
                 GestureDetector(

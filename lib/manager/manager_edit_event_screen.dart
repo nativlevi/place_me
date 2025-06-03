@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import '../general/event_helpers.dart';
 
 class ManagerEditEventScreen extends StatefulWidget {
   final String eventId;
@@ -113,33 +114,8 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
       } catch (_) {
         content = await CharsetConverter.decode("windows-1255", bytes);
       }
-      final lines = content
-          .split(RegExp(r'\r?\n'))
-          .where((line) => line.trim().isNotEmpty)
-          .toList();
-      if (lines.length < 2) return;
-      String headerLine = lines.first;
-      if (headerLine.startsWith('\uFEFF')) headerLine = headerLine.substring(1);
-      final header = headerLine.split(',');
-      final nameIdx = header.indexOf('name');
-      final phoneIdx = header.indexOf('phone');
-      if (nameIdx == -1 || phoneIdx == -1) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('העמודות name ו־phone לא נמצאו בקובץ')),
-        );
-        return;
-      }
-      final tmp = <Map<String, String>>[];
-      for (var i = 1; i < lines.length; i++) {
-        final cols = lines[i].split(',');
-        if (cols.length > max(nameIdx, phoneIdx)) {
-          final name = cols[nameIdx].trim();
-          final phone = cols[phoneIdx].trim();
-          if (name.isNotEmpty && phone.isNotEmpty) {
-            tmp.add({'name': name, 'phone': phone});
-          }
-        }
-      }
+
+      final tmp = parseCsvContent(content);
       setState(() => _parsedCsv = tmp);
       await _addParticipantsFromCsv();
     } catch (e) {
