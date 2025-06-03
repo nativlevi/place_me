@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
 import 'manager_event_type_screen.dart';
 import 'manager_login.dart';
+import 'package:place_me/general/validators.dart';
 
 class ManagerRegisterScreen extends StatefulWidget {
   @override
@@ -151,15 +152,7 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
+                    validator: validateEmail,
                   ),
                   const SizedBox(height: 15),
 
@@ -191,18 +184,7 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                         },
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      if (value.length < 8 ||
-                          !RegExp(r'[A-Z]').hasMatch(value) ||
-                          !RegExp(r'\d').hasMatch(value) ||
-                          !RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
-                        return 'Password must be at least 8 characters, include an uppercase letter, number, and special character.';
-                      }
-                      return null;
-                    },
+                    validator: validatePasswordRegister,
                   ),
                   const SizedBox(height: 15),
 
@@ -235,12 +217,8 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                         },
                       ),
                     ),
-                    validator: (value) {
-                      if (value != passwordController.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
+                    validator: (value) =>
+                        validateConfirmPassword(value, passwordController.text),
                   ),
                   const SizedBox(height: 20),
 
