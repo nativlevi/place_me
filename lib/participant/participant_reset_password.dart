@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:place_me/general/phone_helpers.dart';
+import 'package:place_me/general/validators.dart';
 
 class ParticipantResetPasswordScreen extends StatefulWidget {
   const ParticipantResetPasswordScreen({Key? key}) : super(key: key);
@@ -34,10 +36,7 @@ class _ParticipantResetPasswordScreenState
     });
 
     // המרת הפלאפון לפורמט +972...
-    String phone = _phoneController.text.trim();
-    if (!phone.startsWith('+')) {
-      phone = '+972${phone.substring(1)}';
-    }
+    String phone = convertToInternational(_phoneController.text.trim());
 
     try {
       // שליפה מה־Firestore
@@ -98,12 +97,7 @@ class _ParticipantResetPasswordScreenState
                     borderSide: BorderSide.none,
                   ),
                 ),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Please enter phone';
-                  if (!RegExp(r'^\+?\d{10,15}$').hasMatch(v.trim()))
-                    return 'Enter valid phone';
-                  return null;
-                },
+                validator: validatePhone,
               ),
             ),
             const SizedBox(height: 24),
