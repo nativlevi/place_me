@@ -9,7 +9,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-
 class ManagerEditEventScreen extends StatefulWidget {
   final String eventId;
   ManagerEditEventScreen({required this.eventId});
@@ -351,22 +350,22 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                       spacing: 10,
                       children: [
                         ..._imageUrls.map((url) => Stack(
-                              children: [
-                                Image.network(url, width: 100, height: 100),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: GestureDetector(
-                                    onTap: () => setState(() {
-                                      _imageUrls.remove(url);
-                                      _imageUrlsToRemove.add(url);
-                                    }),
-                                    child: Icon(Icons.close, color: Colors.red),
-                                  ),
-                                ),
-                              ],
-                            )),
-
+                          children: [
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _imageUrls.remove(url);
+                                    _imageUrlsToRemove.add(url);
+                                  });
+                                },
+                                child: Icon(Icons.close, color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        )),
                         // Show newly added images
                         ..._newImages.map((f) =>
                             Image.file(File(f.path), width: 100, height: 100)),

@@ -224,8 +224,25 @@ class _ManagerDetailsUpdateScreenState
 
   Future<void> _saveEvent() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedDate == null || _selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('נא לבחור גם תאריך וגם שעה')),
+      );
+      return;
+    }
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
+
+    final eventDateTime = DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
+      _selectedTime!.hour,
+      _selectedTime!.minute,
+    );
+
+// Deadline for participant preferences (48 hours before event)
+    final deadline = eventDateTime.subtract(Duration(hours: 48));
 
     setState(() => _isSaving = true);
     try {
@@ -244,6 +261,7 @@ class _ManagerDetailsUpdateScreenState
             ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
             : null,
         'createdAt': FieldValue.serverTimestamp(),
+        'preferenceDeadline': deadline.toIso8601String(),
       });
 
       // 2) העלאת תמונות
@@ -338,6 +356,7 @@ class _ManagerDetailsUpdateScreenState
       );
       Navigator.pushNamedAndRemoveUntil(
           context, '/manager_home', (route) => false);
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error saving event: $e')),
