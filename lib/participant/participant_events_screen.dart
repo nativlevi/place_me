@@ -193,7 +193,10 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ParticipantFinalScreen(),
+                                builder: (context) => ParticipantFinalScreen(
+                                  eventId: event['id'] as String,
+                                  participantId: widget.phone,
+                                ),
                               ),
                             );
                           } else {

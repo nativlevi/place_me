@@ -4,8 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
 
+import '../general/seating_service.dart';
 import 'manager_event_type_screen.dart';
 import 'manager_edit_event_screen.dart';
+import 'manager_final_screen.dart';
 
 class ManagerHomeScreen extends StatefulWidget {
   @override
@@ -34,6 +36,21 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
         return 'images/Professional_Event.png';
     }
   }
+
+  Future<void> _generateSeating(String eventId) async {
+    try {
+      final seatingService = SeatingService();
+      await seatingService.generateSmartSeating(eventId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('✅ Seating arrangement generated successfully!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Error generating seating: $e')),
+      );
+    }
+  }
+
 
   List<QueryDocumentSnapshot> sortDocs(
       List<QueryDocumentSnapshot> docs, String sortBy) {
@@ -134,7 +151,7 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                   borderRadius: BorderRadius.circular(30),
                 ),
                 contentPadding:
-                    EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                EdgeInsets.symmetric(vertical: 0, horizontal: 16),
               ),
               onChanged: (val) => setState(() {
                 _searchQuery = val.trim().toLowerCase();
@@ -153,9 +170,9 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                   final filtered = sorted.where((d) {
                     final data = d.data() as Map<String, dynamic>;
                     final name =
-                        (data['eventName'] ?? '').toString().toLowerCase();
+                    (data['eventName'] ?? '').toString().toLowerCase();
                     final type =
-                        (data['eventType'] ?? '').toString().toLowerCase();
+                    (data['eventType'] ?? '').toString().toLowerCase();
                     return _searchQuery.isEmpty ||
                         name.contains(_searchQuery) ||
                         type.contains(_searchQuery);
@@ -261,66 +278,77 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                                   ],
                                 ),
                               ),
-                              IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () async {
-                                  final confirm = await showDialog<bool>(
-                                    context: context,
-                                    builder: (_) => AlertDialog(
-                                      title: Text('Delete Event'),
-                                      content: Text(
-                                          'Are you sure you want to delete this event?'),
-                                      actions: [
-                                        TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, false),
-                                            child: Text('Cancel')),
-                                        TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, true),
-                                            child: Text('Delete')),
-                                      ],
-                                    ),
-                                  );
-                                  if (confirm != true) return;
-                                  try {
-                                    await FirebaseFirestore.instance
-                                        .collection('events')
-                                        .doc(eventDocId)
-                                        .delete();
+                              Column(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.table_chart, color: Colors.blueAccent),
+                                    tooltip: 'Generate Seating',
+                                    onPressed: () async {
+                                      await SeatingService().generateSmartSeating(eventDocId);
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => ManagerFinalScreen(eventId: eventDocId),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  SizedBox(height: 8),
+                                  IconButton(
+                                    icon: Icon(Icons.delete, color: Colors.red),
+                                    tooltip: 'Delete Event',
+                                    onPressed: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (_) => AlertDialog(
+                                          title: Text('Delete Event'),
+                                          content: Text('Are you sure you want to delete this event?'),
+                                          actions: [
+                                            TextButton(
+                                                onPressed: () => Navigator.pop(context, false),
+                                                child: Text('Cancel')),
+                                            TextButton(
+                                                onPressed: () => Navigator.pop(context, true),
+                                                child: Text('Delete')),
+                                          ],
+                                        ),
+                                      );
+                                      if (confirm != true) return;
+                                      try {
+                                        await FirebaseFirestore.instance
+                                            .collection('events')
+                                            .doc(eventDocId)
+                                            .delete();
 
-                                    await FirebaseFirestore.instance
-                                        .collection('managers')
-                                        .doc(currentUser!.uid)
-                                        .collection('events')
-                                        .doc(doc.id)
-                                        .delete();
+                                        await FirebaseFirestore.instance
+                                            .collection('managers')
+                                            .doc(currentUser!.uid)
+                                            .collection('events')
+                                            .doc(doc.id)
+                                            .delete();
 
-                                    final storageRef = FirebaseStorage.instance
-                                        .ref()
-                                        .child('events/$eventDocId');
-                                    final ListResult items =
-                                        await storageRef.listAll();
-                                    for (var item in items.items) {
-                                      await item.delete();
-                                    }
-                                    for (var prefix in items.prefixes) {
-                                      final subItems = await prefix.listAll();
-                                      for (var subItem in subItems.items) {
-                                        await subItem.delete();
+                                        final storageRef =
+                                        FirebaseStorage.instance.ref().child('events/$eventDocId');
+                                        final ListResult items = await storageRef.listAll();
+                                        for (var item in items.items) {
+                                          await item.delete();
+                                        }
+                                        for (var prefix in items.prefixes) {
+                                          final subItems = await prefix.listAll();
+                                          for (var subItem in subItems.items) {
+                                            await subItem.delete();
+                                          }
+                                        }
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Event deleted')));
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Error deleting event: $e')));
                                       }
-                                    }
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            content: Text('Event deleted')));
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            content: Text(
-                                                'Error deleting event: $e')));
-                                  }
-                                },
-                              ),
+                                    },
+                                  ),
+                                ],
+                              )
+
                             ],
                           ),
                         ),
