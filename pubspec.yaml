@@ -31,6 +31,7 @@ dependencies:
   permission_handler: ^10.4.0
   file_selector: ^1.0.3
   csv: ^5.0.1
+  excel: 4.0.6
   path_provider: ^2.0.11
   rxdart: ^0.27.7
 

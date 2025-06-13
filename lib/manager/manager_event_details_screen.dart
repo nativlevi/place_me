@@ -1,16 +1,17 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:charset_converter/charset_converter.dart';
 import '../general/guide_screen.dart';
 import '../general/event_helpers.dart';
+import 'interactive_room_editor.dart';
+import 'package:excel/excel.dart';
 
 class ManagerDetailsUpdateScreen extends StatefulWidget {
   @override
@@ -25,20 +26,18 @@ class _ManagerDetailsUpdateScreenState
   final _locationCtrl = TextEditingController();
   final _participantNameCtrl = TextEditingController();
   final _participantPhoneCtrl = TextEditingController();
+  final _participantEmailCtrl = TextEditingController();
 
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   String? _eventType;
 
-  List<File> _eventImages = [];
   List<Map<String, String>> _manualParticipants = [];
-
   FilePickerResult? _csvResult;
   List<Map<String, String>> _parsedCsv = [];
 
   bool _isSaving = false;
-
-  get i_ => null;
+  String? _createdEventId;
 
   @override
   void didChangeDependencies() {
@@ -55,6 +54,7 @@ class _ManagerDetailsUpdateScreenState
     _locationCtrl.dispose();
     _participantNameCtrl.dispose();
     _participantPhoneCtrl.dispose();
+    _participantEmailCtrl.dispose();
     super.dispose();
   }
 
@@ -76,117 +76,117 @@ class _ManagerDetailsUpdateScreenState
     if (t != null) setState(() => _selectedTime = t);
   }
 
-  Future<void> _pickImages() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickMultiImage();
-    if (picked != null) {
-      setState(() {
-        _eventImages.addAll(picked.map((x) => File(x.path)));
-      });
-    }
-  }
-
-  Future<void> _pickCsv() async {
+  Future<void> _pickFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['csv'],
+        allowedExtensions: ['csv', 'xlsx'],
       );
-      if (result != null && result.files.single.path != null) {
-        setState(() => _csvResult = result);
-        _parseCsv(result.files.single.path!);
-      } else {
+      if (result == null || result.files.single.path == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('לא נבחר קובץ CSV')),
+          SnackBar(content: Text('לא נבחר קובץ')),
         );
+        return;
+      }
+
+      final path = result.files.single.path!;
+      final ext  = result.files.single.extension?.toLowerCase();
+
+      // 1) רק עדכון ה־state – בלי await כאן!
+      setState(() {
+        _csvResult = result;
+      });
+
+      // 2) מחוץ ל־setState קוראים לפונקציה האסינכרונית
+      if (ext == 'xlsx') {
+        await _parseXlsx(path); // Future<void> – זה תקין
+      } else {
+        await _parseCsv(path);  // Future<void> – גם זה
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('שגיאה בפתיחת דיאלוג הקבצים: $e')),
+        SnackBar(content: Text('שגיאה בבחירת הקובץ: $e')),
       );
     }
   }
 
-  void _parseCsv(String path) async {
+
+
+  Future<void> _parseCsv(String path) async {
     try {
       final bytes = await File(path).readAsBytes();
       String content;
 
-      // נסה קודם לקרוא כ-UTF-8
       try {
         content = utf8.decode(bytes);
       } catch (e) {
-        print('⚠️ UTF-8 decoding failed, fallback to windows-1255');
         content = await CharsetConverter.decode("windows-1255", bytes);
       }
 
-      print('📄 Raw CSV Content:\n$content');
+      final lines = content
+          .split(RegExp(r'\r?\n'))
+          .where((line) => line.trim().isNotEmpty)
+          .toList();
+      if (lines.length < 2) return;
 
-      final participants = parseCsvContent(content);
-      setState(() => _parsedCsv = participants);
-      print('✅ Parsed CSV Participants: $_parsedCsv');
+      String headerLine = lines.first;
+      if (headerLine.startsWith('\uFEFF')) headerLine = headerLine.substring(1);
+      final header = headerLine.split(',');
 
-      // הוספת כל המשתתפים לקולקשן users
+      final nameIdx = header.indexOf('name');
+      final phoneIdx = header.indexOf('phone');
+      final emailIdx = header.indexOf('mail');
+
+      if (nameIdx == -1 || phoneIdx == -1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('העמודות name ו־phone לא נמצאו בקובץ')),
+        );
+        return;
+      }
+
+      final tmp = <Map<String, String>>[];
+      for (var i = 1; i < lines.length; i++) {
+        final cols = lines[i].split(',');
+        if (cols.length > max(nameIdx, max(phoneIdx, emailIdx))) {
+          final name = cols[nameIdx].trim();
+          final phone = cols[phoneIdx].trim();
+          final rawEmail = (emailIdx != -1 && emailIdx < cols.length)
+              ? cols[emailIdx].trim()
+              : '';
+          final email = rawEmail;
+
+          if (name.isNotEmpty && phone.isNotEmpty) {
+            tmp.add({'name': name, 'phone': phone, 'email': email});
+          }
+        }
+      }
+
+      setState(() => _parsedCsv = tmp);
       await _addParticipantsToUsers();
     } catch (e) {
-      print('❌ Error parsing CSV: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('שגיאה בקריאת ה־CSV: $e')),
       );
     }
   }
 
+
   Future<void> _addParticipantsToUsers() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('User not logged in')));
-      return;
+    if (user == null) return;
+
+    for (var participant in _parsedCsv) {
+      final phone = participant['phone']!;
+      final email = participant['email'] ?? '${phone}@example.com'; // השתמש במייל מהCSV אם קיים
+      final password = 'defaultPassword';
+
+      await FirebaseFirestore.instance.collection('users').doc(phone).set({
+        'phone': phone,
+        'email': email,
+        'password': password,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
     }
-
-    try {
-      for (var participant in _parsedCsv) {
-        final phone = participant['phone']!;
-
-        // הוספת שדות נוספים (email, password)
-        final email = '${phone}@example.com'; // אפשר ליצור מייל לפי הטלפון
-        final password =
-            'defaultPassword'; // אפשר ליצור סיסמה ברירת מחדל או לבקש מהמשתמש למלא אותה
-
-        // הוספה לקולקשן 'users'
-        await FirebaseFirestore.instance.collection('users').doc(phone).set({
-          'phone': phone,
-          'email': email,
-          'password': password, // יש להוסיף את הסיסמה במקרה הזה
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-
-        print('Added user with phone: $phone');
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Participants added successfully!')));
-    } catch (e) {
-      print('Error adding participants: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding participants: $e')));
-    }
-  }
-
-  void _addManualParticipant() {
-    final name = _participantNameCtrl.text.trim();
-    final phone = _participantPhoneCtrl.text.trim();
-    if (name.isEmpty || phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('נא למלא שם ומספר טלפון')),
-      );
-      return;
-    }
-    setState(() {
-      _manualParticipants.add({'name': name, 'phone': phone});
-      _participantNameCtrl.clear();
-      _participantPhoneCtrl.clear();
-    });
   }
 
   Future<void> _saveEvent() async {
@@ -197,6 +197,7 @@ class _ManagerDetailsUpdateScreenState
       );
       return;
     }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -207,97 +208,81 @@ class _ManagerDetailsUpdateScreenState
       _selectedTime!.hour,
       _selectedTime!.minute,
     );
-
-// Deadline for participant preferences (48 hours before event)
     final deadline = eventDateTime.subtract(Duration(hours: 48));
 
     setState(() => _isSaving = true);
     try {
       final docRef = FirebaseFirestore.instance.collection('events').doc();
+      _createdEventId = docRef.id;
 
-      // 1) בסיס האירוע
       await docRef.set({
         'managerId': user.uid,
         'eventType': _eventType,
         'eventName': _nameCtrl.text.trim(),
         'location': _locationCtrl.text.trim(),
-        'date': _selectedDate != null
-            ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
-            : null,
-        'time': _selectedTime != null
-            ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
-            : null,
+        'date': DateFormat('yyyy-MM-dd').format(_selectedDate!),
+        'time': '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
         'createdAt': FieldValue.serverTimestamp(),
         'preferenceDeadline': deadline.toIso8601String(),
       });
 
-      // 2) העלאת תמונות
-      final imageUrls = <String>[];
-      for (var i = 0; i < _eventImages.length; i++) {
-        final f = _eventImages[i];
-        final filename = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
-        final ref = FirebaseStorage.instance
-            .ref('events/${docRef.id}/images/$filename');
-        try {
-          await ref.putFile(f);
-          final url = await ref.getDownloadURL();
-          imageUrls.add(url);
-        } catch (e) {
-          print('Failed to upload image $i: $e');
-        }
-      }
-      await docRef.update({'imageUrls': imageUrls});
-
-      // 3) העלאת CSV
       final csvPath = _csvResult?.files.single.path;
       if (csvPath != null) {
         final f = File(csvPath);
-        final ref = FirebaseStorage.instance
-            .ref('events/${docRef.id}/participants.csv');
-        try {
-          await ref.putFile(f);
-          final url = await ref.getDownloadURL();
-          await docRef.update({'participantFileUrl': url});
-          print('📑 Uploaded CSV: $url');
-        } catch (e) {
-          print('🔺 failed to upload CSV: $e');
-        }
+        final ref = FirebaseStorage.instance.ref('events/${docRef.id}/participants.csv');
+        await ref.putFile(f);
+        final url = await ref.getDownloadURL();
+        await docRef.update({'participantFileUrl': url});
       }
 
-// 4) שמירת המשתתפים ושמירתם גם כ־allowed_users
       final allParticipants = [..._parsedCsv, ..._manualParticipants];
 
       final participantPhones = allParticipants
-          .map((p) {
-            String phone = p['phone']!.trim();
-            if (!phone.startsWith('+')) {
-              phone = '+972${phone.substring(1)}';
-            }
-            return phone;
-          })
+          .map((p) => p['phone']!.startsWith('+') ? p['phone']! : '+972${p['phone']!.substring(1)}')
           .toSet()
           .toList();
 
-      // שמירת המערך במסמך האירוע הראשי:
-      await docRef.update({
-        'allowedParticipants': participantPhones,
-      });
+      await docRef.update({'allowedParticipants': participantPhones});
+
+      // כאן יוצרים מפת מיילים ייחודית
+      final Map<String, Map<String, String>> uniqueByEmail = {};
+
       for (var p in allParticipants) {
-        String phone = p['phone']!.trim();
-        if (!phone.startsWith('+')) {
-          phone = '+972${phone.substring(1)}';
+        final email = p['email']?.trim() ?? '';
+        if (email.isNotEmpty) {
+          uniqueByEmail[email] = p;
         }
+      }
+
+      final uniqueParticipants = uniqueByEmail.values.toList();
+
+      // שומרים את המשתתפים ב-firestore ויוצרים מיילים ייחודיים
+      for (var p in uniqueParticipants) {
+        final name = p['name']!;
+        final phone = p['phone']!.startsWith('+') ? p['phone']! : '+972${p['phone']!.substring(1)}';
+        final email = p['email']?.trim();
 
         await docRef.collection('participants').add({
-          'name': p['name'],
+          'name': name,
           'phone': phone,
+          'email': email,
           'addedAt': FieldValue.serverTimestamp(),
         });
 
         await _addAllowedUser(phone, docRef.id);
-      }
 
-      // 5) קישור למנהל
+        if (email?.isNotEmpty == true) {
+          await FirebaseFirestore.instance.collection('mail').add({
+            'to': email,
+            'message': {
+              'subject': 'You have been invited to an event',
+              'text': 'שלום $name,\n'
+                  'הוזמנת לאירוע ${_nameCtrl.text.trim()} במיקום ${_locationCtrl.text.trim()}.\n'
+                  'אנא התקן את אפליקצית PlaceMe והירשם.'
+            }
+          });
+        }
+      }
 
       await FirebaseFirestore.instance
           .collection('managers')
@@ -309,21 +294,17 @@ class _ManagerDetailsUpdateScreenState
         'eventName': _nameCtrl.text.trim(),
         'eventType': _eventType,
         'location': _locationCtrl.text.trim(),
-        'date': _selectedDate != null
-            ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
-            : null,
-        'time': _selectedTime != null
-            ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
-            : null,
+        'date': DateFormat('yyyy-MM-dd').format(_selectedDate!),
+        'time': '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Event saved successfully!')),
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => InteractiveRoomEditor(eventId: docRef.id),
+        ),
       );
-      Navigator.pushNamedAndRemoveUntil(
-          context, '/manager_home', (route) => false);
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error saving event: $e')),
@@ -334,8 +315,10 @@ class _ManagerDetailsUpdateScreenState
   }
 
   Future<void> _addAllowedUser(String phone, String eventId) async {
-    final docRef = FirebaseFirestore.instance.collection('events').doc(eventId);
-    await docRef.update({
+    await FirebaseFirestore.instance
+        .collection('events')
+        .doc(eventId)
+        .update({
       'allowedParticipants': FieldValue.arrayUnion([phone]),
     });
 
@@ -347,6 +330,58 @@ class _ManagerDetailsUpdateScreenState
       'addedAt': FieldValue.serverTimestamp(),
     });
   }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> _parseXlsx(String path) async {
+    final bytes = File(path).readAsBytesSync();
+    final excel = Excel.decodeBytes(bytes);
+    final tmp = <Map<String, String>>[];
+
+    // נניח שהגיליון הראשון הוא זה עם הכותרות
+    final sheet = excel.tables[excel.tables.keys.first];
+    if (sheet == null || sheet.maxRows < 2) return;
+
+    // כותרות בשורה הראשונה
+    final header = sheet.row(0).map((e) => e?.value.toString().toLowerCase()).toList();
+    final nameIdx  = header.indexOf('name');
+    final phoneIdx = header.indexOf('phone');
+    final emailIdx = header.indexOf('mail') >= 0
+        ? header.indexOf('mail')
+        : (header.indexOf('email'));
+
+    if (nameIdx < 0 || phoneIdx < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('העמודות name ו־phone לא נמצאו בגיליון')),
+      );
+      return;
+    }
+
+    for (var i = 1; i < sheet.maxRows; i++) {
+      final row = sheet.row(i);
+      final name  = row[nameIdx]?.value.toString().trim() ?? '';
+      final phone = row[phoneIdx]?.value.toString().trim() ?? '';
+      String rawEmail = '';
+      if (emailIdx >= 0 && emailIdx < row.length) {
+        rawEmail = row[emailIdx]?.value.toString().trim() ?? '';
+      }
+      final email = rawEmail.isNotEmpty ? rawEmail : '${phone}@example.com';
+
+      if (name.isNotEmpty && phone.isNotEmpty) {
+        tmp.add({'name': name, 'phone': phone, 'email': email});
+      }
+    }
+
+    setState(() => _parsedCsv = tmp);
+    await _addParticipantsToUsers();
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -364,8 +399,7 @@ class _ManagerDetailsUpdateScreenState
             fontWeight: FontWeight.bold,
             color: Color(0xFF727D73),
           ),
-        ),
-      ),
+        ),      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -374,19 +408,8 @@ class _ManagerDetailsUpdateScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Event Type
-                Text(
-                  'Event Type: $_eventType',
-                  style: TextStyle(
-                    fontFamily: 'Source Sans Pro',
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF3D3D3D),
-                  ),
-                ),
+                Text('Event Type: $_eventType', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF3D3D3D))),
                 SizedBox(height: 20),
-
-                // Name
                 TextFormField(
                   controller: _nameCtrl,
                   decoration: InputDecoration(
@@ -394,51 +417,33 @@ class _ManagerDetailsUpdateScreenState
                     hintText: 'Enter Event Name',
                     filled: true,
                     fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
                   ),
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'נא למלא שם אירוע' : null,
+                  validator: (v) => v == null || v.isEmpty ? 'נא למלא שם אירוע' : null,
                 ),
                 SizedBox(height: 20),
-
-                // Location
                 TextFormField(
                   controller: _locationCtrl,
                   decoration: InputDecoration(
-                    prefixIcon:
-                        Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
+                    prefixIcon: Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
                     hintText: 'Enter Location',
                     filled: true,
                     fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
                   ),
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'נא למלא מיקום' : null,
+                  validator: (v) => v == null || v.isEmpty ? 'נא למלא מיקום' : null,
                 ),
                 SizedBox(height: 20),
-
-                // Date & Time
                 Row(
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _pickDate,
-                        style: ElevatedButton.styleFrom(
+                        onPressed: _pickDate,                        style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF3D3D3D),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                         ),
                         child: Text(
-                          _selectedDate == null
-                              ? 'Select Date'
-                              : dateFmt.format(_selectedDate!),
+                          _selectedDate == null ? 'Select Date' : dateFmt.format(_selectedDate!),
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -449,14 +454,10 @@ class _ManagerDetailsUpdateScreenState
                         onPressed: _pickTime,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF3D3D3D),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                         ),
                         child: Text(
-                          _selectedTime == null
-                              ? 'Select Time'
-                              : '${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+                          _selectedTime == null ? 'Select Time' : '${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -464,203 +465,172 @@ class _ManagerDetailsUpdateScreenState
                   ],
                 ),
                 SizedBox(height: 20),
-
-                // Upload Images
-                Text(
-                  'Upload clear and high-quality images in PNG, JPG, or JPEG format.',
-                  style: TextStyle(
-                    fontFamily: 'Source Sans Pro',
-                    fontSize: 16,
-                    color: Color(0xFF727D73),
-                  ),
-                ),
+                Text('Upload a participant list in CSV format.', style: TextStyle(fontSize: 16, color: Color(0xFF727D73))),
+                SizedBox(height: 10),
                 ElevatedButton.icon(
-                  onPressed: _pickImages,
-                  icon: Icon(Icons.image, color: Colors.white),
-                  label: Text(
-                    _eventImages.isEmpty
-                        ? 'Upload Images'
-                        : 'Images Selected (${_eventImages.length})',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF3D3D3D),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                ),
-                if (_eventImages.isNotEmpty) ...[
-                  SizedBox(height: 10),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: _eventImages
-                        .map((f) => Stack(
-                              children: [
-                                Image.file(f, width: 100, height: 100),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _eventImages.remove(f)),
-                                    child: Icon(Icons.close, color: Colors.red),
-                                  ),
-                                ),
-                              ],
-                            ))
-                        .toList(),
-                  ),
-                ],
-                SizedBox(height: 20),
-
-                // Upload CSV
-                Text(
-                  'Upload a participant list in CSV format.',
-                  style: TextStyle(
-                    fontFamily: 'Source Sans Pro',
-                    fontSize: 16,
-                    color: Color(0xFF727D73),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => GuideScreen(
-                          section:
-                              'Upload Participant List', // החלק הספציפי של ההנחיות
-                        ),
-                      ),
-                    );
-                  },
-                  child: Text('View Guidelines'),
-                ),
-
-                ElevatedButton.icon(
-                  onPressed: _pickCsv,
+                  onPressed: _pickFile,
                   icon: Icon(Icons.upload_file, color: Colors.white),
                   label: Text(
-                    _csvResult == null
-                        ? 'Upload Participant List'
-                        : 'CSV Selected',
+                      _csvResult == null ? 'בחר קובץ CSV/XLSX' : '${_csvResult!.files.single.name} נבחר',
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF3D3D3D),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                ),
+                if (_csvResult != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Chip(
+                      backgroundColor: Colors.green.shade50,
+                      avatar: Icon(Icons.insert_drive_file, color: Color(0xFF4A7C59)),
+                      label: Text(
+                        _csvResult!.files.single.name,
+                        style: TextStyle(color: Colors.green.shade800),
+                      ),
+                    ),
+                  ),
+                SizedBox(height: 10),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => GuideScreen()),
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    'View Guidelines',
+                    style: TextStyle(
+                      color: Color(0xFF3D3D3D),
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
-                if (_csvResult != null) ...[
-                  SizedBox(height: 8),
-                  Text(
-                    'Selected file: ${_csvResult!.files.single.name}',
-                    style: TextStyle(color: Colors.green),
-                  ),
-                ],
-                SizedBox(height: 20),
-
-                // Manual Participants
+                const SizedBox(height: 12),
                 Text(
                   'Add participants manually:',
-                  style: TextStyle(
-                    fontFamily: 'Source Sans Pro',
-                    fontSize: 16,
-                    color: Color(0xFF727D73),
-                  ),
+                  style: TextStyle(fontSize: 16, color: Color(0xFF727D73)),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Row(
                   children: [
+                    // Name
                     Expanded(
                       child: TextField(
                         controller: _participantNameCtrl,
                         decoration: InputDecoration(
-                          prefixIcon:
-                              Icon(Icons.person, color: Color(0xFF3D3D3D)),
                           hintText: 'Name',
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none,
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+
+                    const SizedBox(width: 8),
+                    // Phone
                     Expanded(
                       child: TextField(
-                        controller: _participantPhoneCtrl,
+                        controller: _participantNameCtrl,
                         decoration: InputDecoration(
-                          prefixIcon:
-                              Icon(Icons.phone, color: Color(0xFF3D3D3D)),
-                          hintText: 'Phone',
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none,
-                          ),
+                          hintText: 'Phone ',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: _addManualParticipant,
-                      child: Icon(Icons.add, color: Colors.white),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF3D3D3D),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+
+                    const SizedBox(width: 8),
+                    // Email
+                    Expanded(
+                      child: TextField(
+                        controller: _participantNameCtrl,
+                        decoration: InputDecoration(
+                          hintText: 'Email',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                         ),
                       ),
+                    ),
+
+                    const SizedBox(width: 8),
+                    // Add button
+                    ElevatedButton(
+                      onPressed: () {
+                        final name  = _participantNameCtrl.text.trim();
+                        final phone = _participantPhoneCtrl.text.trim();
+                        final email = _participantEmailCtrl.text.trim();
+                        if (name.isEmpty || phone.isEmpty || email.isEmpty) {
+                          _showSnackBar('Please fill all fields');
+                          return;
+                        }
+                        setState(() {
+                          _manualParticipants.add({
+                            'name':  name,
+                            'phone': phone,
+                            'email': email,
+                          });
+                          _participantNameCtrl.clear();
+                          _participantPhoneCtrl.clear();
+                          _participantEmailCtrl.clear();
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3D3D3D),
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Icon(Icons.add, color: Colors.white),
                     ),
                   ],
                 ),
                 if (_manualParticipants.isNotEmpty) ...[
-                  SizedBox(height: 8),
-                  ..._manualParticipants
-                      .map((p) => Text('- ${p['name']} (${p['phone']})')),
+                  const SizedBox(height: 16),
+                  // רשימה לא ממוסגרת של כרטיסים
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: _manualParticipants.length,
+                    itemBuilder: (ctx, i) {
+                      final p = _manualParticipants[i];
+                      return Card(
+                        color: Colors.white.withOpacity(0.8),  // כאן מגדירים שקיפות של 80%
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        child: ListTile(
+                          leading: const Icon(Icons.person, color: Color(0xFF3D3D3D)),
+                          title: Text(p['name']!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text('${p['phone']} • ${p['email']}'),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Color(0xFF3D3D3D)),
+                            onPressed: () {
+                              setState(() {
+                                _manualParticipants.removeAt(i);
+                              });
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ],
-                SizedBox(height: 20),
 
-                // Submit Button
+                SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
-                    onPressed: _isSaving
-                        ? null
-                        : () async {
-                            print('🔘 Submit pressed');
-                            await _saveEvent();
-                          },
+                    onPressed: _isSaving ? null : _saveEvent,
                     child: _isSaving
-                        ? SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            'Submit',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        ? CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
+                        : Text('Submit', style: TextStyle(color: Colors.white,fontSize: 18, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF3D3D3D),
-                      padding:
-                          EdgeInsets.symmetric(vertical: 15, horizontal: 100),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
+                      padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
                   ),
                 ),
