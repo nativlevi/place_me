@@ -18,8 +18,8 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
   final User? currentUser = FirebaseAuth.instance.currentUser;
   final DateFormat _dateTimeFormat = DateFormat('MMM d, yyyy HH:mm');
 
-  String _sortOption = 'תאריך קרוב';
-  final List<String> _sortOptions = ['תאריך קרוב', 'שם (א-ב)'];
+  String _sortOption = 'Nearest Date';
+  final List<String> _sortOptions = ['Nearest Date', 'Name (A–Z)'];
 
   // 🔍 משתנה חיפוש
   String _searchQuery = '';
@@ -38,6 +38,21 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
   }
 
   Future<void> _generateSeating(String eventId) async {
+    final participantsSnap = await FirebaseFirestore.instance
+        .collection('events')
+        .doc(eventId)
+        .collection('participants')
+        .get();
+
+    final participants = participantsSnap.docs;
+    if (participants.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('אין משתתפים, אנא הוסף משתתפים לפני יצירת סידור ישיבה')),
+      );
+      return;
+    }
+
+    // רק אם יש משתתפים ממשיכים
     try {
       final seatingService = SeatingService();
       await seatingService.generateSmartSeating(eventId);
@@ -52,9 +67,10 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
   }
 
 
+
   List<QueryDocumentSnapshot> sortDocs(
       List<QueryDocumentSnapshot> docs, String sortBy) {
-    if (sortBy == 'שם (א-ב)') {
+    if (sortBy == 'Name (A–Z)') {
       docs.sort((a, b) {
         final aName = (a.data() as Map)['eventName'] ?? '';
         final bName = (b.data() as Map)['eventName'] ?? '';
@@ -95,38 +111,48 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
         title: Text(
           'My Events',
           style: TextStyle(
-            fontFamily: 'Source Sans Pro',
+            fontFamily: 'Satreva',
+            fontSize: 40,
+            fontWeight: FontWeight.bold,
             color: Color(0xFF727D73),
           ),
         ),
         actions: [
           PopupMenuButton<String>(
-            onSelected: (String newValue) {
-              setState(() {
-                _sortOption = newValue;
-              });
-            },
+            onSelected: (String newValue) => setState(() => _sortOption = newValue),
             icon: Icon(Icons.sort, color: Color(0xFF727D73)),
-            itemBuilder: (BuildContext context) {
-              return _sortOptions.map((String choice) {
-                return PopupMenuItem<String>(
-                  value: choice,
-                  child: Text(
-                    choice,
-                    style: TextStyle(
-                      fontFamily: 'Source Sans Pro',
-                      fontWeight: choice == _sortOption
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      color: choice == _sortOption
-                          ? Color(0xFF3D3D3D)
-                          : Colors.black54,
-                    ),
+            offset: Offset(0, 40),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            color: Colors.white.withOpacity(0.95),
+            elevation: 6,
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'Nearest Date',
+                child: Text(
+                  'Nearest Date',
+                  style: TextStyle(
+                    fontFamily: 'Source Sans Pro',
+                    fontWeight: _sortOption == 'Nearest Date' ? FontWeight.bold : FontWeight.normal,
+                    color: Color(0xFF3D3D3D),
                   ),
-                );
-              }).toList();
-            },
+                ),
+              ),
+              PopupMenuItem(
+                value: 'Name (A–Z)',
+                child: Text(
+                  'Name (A–Z)',
+                  style: TextStyle(
+                    fontFamily: 'Source Sans Pro',
+                    fontWeight: _sortOption == 'Name (A–Z)' ? FontWeight.bold : FontWeight.normal,
+                    color: Color(0xFF3D3D3D),
+                  ),
+                ),
+              ),
+            ],
           ),
+
           IconButton(
             icon: Icon(Icons.logout, color: Color(0xFF727D73)),
             onPressed: () async {
@@ -143,7 +169,7 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
             // 🔍 TextField לחיפוש
             TextField(
               decoration: InputDecoration(
-                hintText: 'חפש אירוע לפי שם או סוג',
+                hintText: 'Search events by name or type',
                 prefixIcon: Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.white,
@@ -281,44 +307,185 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                               Column(
                                 children: [
                                   IconButton(
-                                    icon: Icon(Icons.table_chart, color: Colors.blueAccent),
+                                    icon: Icon(Icons.table_chart, color: const Color(0xFF727D73)),
                                     tooltip: 'Generate Seating',
                                     onPressed: () async {
-                                      await SeatingService().generateSmartSeating(eventDocId);
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => ManagerFinalScreen(eventId: eventDocId),
+                                      final proceed = await showDialog<bool>(
+                                        context: context,
+                                        barrierColor: Colors.black26,
+                                        builder: (_) => Dialog(
+                                          backgroundColor: Colors.white.withOpacity(0.95),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                          insetPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  'Generate Seating?',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Source Sans Pro',
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF3D3D3D),
+                                                  ),
+                                                ),
+                                                SizedBox(height: 12),
+                                                Text(
+                                                  'Are you sure you want to automatically generate the seating arrangement?',
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Color(0xFF727D73),
+                                                    height: 1.4,
+                                                  ),
+                                                ),
+                                                SizedBox(height: 24),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                  children: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.pop(context, false),
+                                                      style: TextButton.styleFrom(
+                                                        foregroundColor: Color(0xFF6E6A8E),
+                                                        textStyle: TextStyle(
+                                                          fontSize: 16,
+                                                          fontStyle: FontStyle.italic,
+                                                        ),
+                                                      ),
+                                                      child: Text('Cancel'),
+                                                    ),
+                                                    ElevatedButton(
+                                                      onPressed: () => Navigator.pop(context, true),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: Color(0xFF3D3D3D),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                      ),
+                                                      child: Text(
+                                                        'Generate',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                          color: Colors.white,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                       );
+
+                                      if (proceed == true) {
+                                        try {
+                                          await SeatingService().generateSmartSeating(eventDocId);
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => ManagerFinalScreen(eventId: eventDocId),
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('❌ Error generating seating: $e')),
+                                          );
+                                        }
+                                      }
                                     },
                                   ),
+
                                   SizedBox(height: 8),
                                   IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.red),
+                                    icon: const Icon(Icons.delete, color: Color(0xFF3D3D3D)),
                                     tooltip: 'Delete Event',
                                     onPressed: () async {
                                       final confirm = await showDialog<bool>(
                                         context: context,
-                                        builder: (_) => AlertDialog(
-                                          title: Text('Delete Event'),
-                                          content: Text('Are you sure you want to delete this event?'),
-                                          actions: [
-                                            TextButton(
-                                                onPressed: () => Navigator.pop(context, false),
-                                                child: Text('Cancel')),
-                                            TextButton(
-                                                onPressed: () => Navigator.pop(context, true),
-                                                child: Text('Delete')),
-                                          ],
+                                        barrierColor: Colors.black26,
+                                        builder: (_) => Dialog(
+                                          backgroundColor: Colors.white.withOpacity(0.95),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                          insetPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  'Delete Event',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Source Sans Pro',
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF3D3D3D),
+                                                  ),
+                                                ),
+                                                SizedBox(height: 12),
+                                                Text(
+                                                  'Are you sure you want to delete this event?',
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Color(0xFF727D73),
+                                                    height: 1.4,
+                                                  ),
+                                                ),
+                                                SizedBox(height: 24),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                  children: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.pop(context, false),
+                                                      style: TextButton.styleFrom(
+                                                        foregroundColor: Color(0xFF6E6A8E),
+                                                        textStyle: TextStyle(
+                                                          fontSize: 16,
+                                                          fontStyle: FontStyle.italic,
+                                                        ),
+                                                      ),
+                                                      child: Text('Cancel'),
+                                                    ),
+                                                    ElevatedButton(
+                                                      onPressed: () => Navigator.pop(context, true),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: Color(0xFFB33E5A),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                      ),
+                                                      child: Text(
+                                                        'Delete',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                          color: Colors.white,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                       );
+
                                       if (confirm != true) return;
+
                                       try {
+                                        // Remove Firestore document
                                         await FirebaseFirestore.instance
                                             .collection('events')
                                             .doc(eventDocId)
                                             .delete();
 
+                                        // Remove manager's reference
                                         await FirebaseFirestore.instance
                                             .collection('managers')
                                             .doc(currentUser!.uid)
@@ -326,9 +493,9 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                                             .doc(doc.id)
                                             .delete();
 
-                                        final storageRef =
-                                        FirebaseStorage.instance.ref().child('events/$eventDocId');
-                                        final ListResult items = await storageRef.listAll();
+                                        // Delete any stored files in Firebase Storage
+                                        final storageRef = FirebaseStorage.instance.ref('events/$eventDocId');
+                                        final items = await storageRef.listAll();
                                         for (var item in items.items) {
                                           await item.delete();
                                         }
@@ -338,14 +505,18 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                                             await subItem.delete();
                                           }
                                         }
+
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('Event deleted')));
+                                          SnackBar(content: Text('✅ Event deleted successfully')),
+                                        );
                                       } catch (e) {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('Error deleting event: $e')));
+                                          SnackBar(content: Text('❌ Error deleting event: $e')),
+                                        );
                                       }
                                     },
                                   ),
+
                                 ],
                               )
 

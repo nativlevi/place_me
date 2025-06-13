@@ -53,7 +53,7 @@ class ParticipantFinalScreen extends StatelessWidget {
             future: Future.wait([
               _db
                   .collection('users')
-                  .doc(currentUid)
+                  .doc(participantId)
                   .collection('preferences')
                   .where('eventId', isEqualTo: eventId)
                   .get(),
@@ -79,8 +79,8 @@ class ParticipantFinalScreen extends StatelessWidget {
               for (var doc in usersSnap.docs) {
                 final data = doc.data() as Map<String, dynamic>;
                 final phone = data['phone']?.toString();
-                if (phone == null) continue; // דלג אם אין phone
-                final name = data['name'] ?? phone;
+                if (phone == null) continue;
+                final name = data['name']?.toString() ?? phone; // ← כאן תעדיף שם על פני טלפון
                 namesMap[phone] = name;
               }
 
@@ -96,7 +96,7 @@ class ParticipantFinalScreen extends StatelessWidget {
                 seating: seating,
                 participants: participants,
                 columns: 4,
-                prefsMap: {currentUid: myPrefs},
+                prefsMap: {participantId: myPrefs},
                 namesMap: namesMap,
               );
             },

@@ -114,7 +114,7 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                 ),
                 Image.asset(
                   'images/icon.png',
-                  height: 250,
+                  height: 230,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -163,6 +163,11 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                             borderRadius: BorderRadius.circular(30.0),
                             borderSide: BorderSide.none,
                           ),
+                          errorStyle: TextStyle(
+                            color: Colors.red.shade700,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
                         ),
                         validator: validateEmail),
                   ),
@@ -198,7 +203,7 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                       ),
                       validator: validatePassword),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 7),
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -218,18 +223,34 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
                 if (_errorMessage != null)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10.0),
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(
-                        color: Colors.red[800],
-                        fontWeight: FontWeight.bold,
+                    padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red.shade700),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                color: Colors.red.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
+
                 const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
@@ -259,7 +280,7 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                           ),
                         ),
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 10),
                 // Divider and "Or continue with" text
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
@@ -289,17 +310,35 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 25),
-                // כפתורי התחברות: Google ו-Facebook
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: () => signInWithGoogle(),
-                      child: Image.asset('images/google.png', height: 35),
+                const SizedBox(height: 12),
+                Center(
+                  child: SizedBox(
+                    width: 190,      // make the button as wide as you like
+                    height: 50,      // and a comfortable height
+                    child: ElevatedButton.icon(
+                      onPressed: signInWithGoogle,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        side: BorderSide(color: Colors.grey[300]!),
+                        elevation: 2,
+                      ),
+                      icon: Image.asset('images/google.png', height: 24),
+                      label: Text(
+                        'Sign in with Google',
+                        style: TextStyle(
+                          fontFamily: 'Source Sans 3',
+                          color: Colors.black87,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
-                  ],
+                  ),
                 ),
+                const SizedBox(height: 8),
               ],
             ),
           ),

@@ -42,9 +42,7 @@ class _MyAppState extends State<MyApp> {
         routes: {
           '/splash': (context) => SplashScreen(),
           '/login': (context) => LoginScreen(),
-          '/guide': (context) => GuideScreen(
-                section: '',
-              ),
+          '/guide': (context) => GuideScreen(),
           '/manager_login': (context) => ManagerLoginScreen(),
           '/participant_login': (context) => ParticipantLoginScreen(),
           '/loading': (context) => LoadingScreen(

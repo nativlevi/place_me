@@ -54,11 +54,23 @@ class _SeatingPreferencesScreenState extends State<SeatingPreferencesScreen> {
         .doc(widget.eventId)
         .collection('participants');
     final snap = await col.get();
+
+    // נורמליזציה של הטלפון שלי (current user)
+    final myPhoneNorm = widget.phone.replaceAll(RegExp(r'\D'), '');
+
     setState(() {
-      _participants =
-          snap.docs.map((d) => (d.data()['name'] as String?) ?? d.id).toList();
+      _participants = snap.docs
+      // מנפה את עצמי ע"י השוואה על גרסה מנורמלת
+          .where((d) {
+        final phone = (d.data()['phone'] as String?) ?? '';
+        final phoneNorm = phone.replaceAll(RegExp(r'\D'), '');
+        return phoneNorm != myPhoneNorm;
+      })
+          .map((d) => (d.data()['name'] as String?) ?? d.id)
+          .toList();
     });
   }
+
 
   Future<void> _showMultiSelectDialog(bool isToField) async {
     // העתקת הבחירות הנוכחיות לטמפ־ליסט כדי לא לבטל אותן במקרה של 'ביטול'

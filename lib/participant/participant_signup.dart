@@ -185,7 +185,7 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    validator: validateEmail,
+                    // validator: validateEmail,
                   ),
                   const SizedBox(height: 20),
                   TextFormField(
@@ -215,7 +215,7 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                         },
                       ),
                     ),
-                    validator: validatePasswordRegister,
+                    // validator: validatePasswordRegister,
                   ),
                   const SizedBox(height: 15),
                   TextFormField(

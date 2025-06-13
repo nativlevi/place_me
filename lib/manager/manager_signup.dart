@@ -184,7 +184,7 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                         },
                       ),
                     ),
-                    validator: validatePasswordRegister,
+                    // validator: validatePasswordRegister,
                   ),
                   const SizedBox(height: 15),
 
