@@ -38,7 +38,7 @@ class _MyAppState extends State<MyApp> {
     return SafeArea(
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        initialRoute: '/splash',
+        initialRoute: '/login',
         routes: {
           '/splash': (context) => SplashScreen(),
           '/login': (context) => LoginScreen(),
