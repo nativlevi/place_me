@@ -1,1 +1,19 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"placeme-firebase","appId":"1:278306466027:android:7d479060435e76a9f376ae","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"placeme-firebase","configurations":{"android":"1:278306466027:android:7d479060435e76a9f376ae","ios":"1:278306466027:ios:58000d2a7933d056f376ae","macos":"1:278306466027:ios:58000d2a7933d056f376ae","web":"1:278306466027:web:6be6da326c2c17b5f376ae","windows":"1:278306466027:web:1b66995d4055ca82f376ae"}}}}}}
+{
+  "functions": [
+    {
+      "source": "email_functions",
+      "codebase": "email_functions",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "extensions": {
+    "firestore-send-email": "firebase/firestore-send-email@0.2.3",
+    "firestore-send-email-efoz": "firebase/firestore-send-email@0.2.3"
+  }
+}
