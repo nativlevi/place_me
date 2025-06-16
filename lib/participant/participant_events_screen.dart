@@ -109,7 +109,8 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('events')
-                    .where('allowedParticipants', arrayContains: normalizedPhone)
+                    .where('allowedParticipants',
+                        arrayContains: normalizedPhone)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
@@ -195,7 +196,7 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
                               MaterialPageRoute(
                                 builder: (context) => ParticipantFinalScreen(
                                   eventId: event['id'] as String,
-                                  participantId: widget.phone,
+                                  participantPhone: widget.phone,
                                 ),
                               ),
                             );

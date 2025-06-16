@@ -1,0 +1,31 @@
+event_id,name,type,datetime,location,participants_csv
+event_924566,Workshop Session #1,Conference/Professional Event,2025-07-14 21:00,Ashdod,participants_event_924566.csv
+event_943861,Tech Meetup #2,Classroom/Workshop,2025-07-30 21:00,Haifa,participants_event_943861.csv
+event_574997,Conference Day #3,Family/Social Event,2025-07-15 21:00,Ashdod,participants_event_574997.csv
+event_470176,Tech Meetup #4,Family/Social Event,2025-08-12 21:00,Ashdod,participants_event_470176.csv
+event_931990,Workshop Session #5,Classroom/Workshop,2025-08-11 21:00,Ashdod,participants_event_931990.csv
+event_171585,Birthday Party #6,Family/Social Event,2025-08-06 21:00,Tel Aviv,participants_event_171585.csv
+event_927763,Tech Meetup #7,Family/Social Event,2025-07-08 21:00,Haifa,participants_event_927763.csv
+event_516251,Workshop Session #8,Classroom/Workshop,2025-06-25 21:00,Netanya,participants_event_516251.csv
+event_988017,Birthday Party #9,Family/Social Event,2025-08-01 21:00,Tel Aviv,participants_event_988017.csv
+event_870917,Workshop Session #10,Classroom/Workshop,2025-07-15 21:00,Tel Aviv,participants_event_870917.csv
+event_246875,Conference Day #11,Family/Social Event,2025-07-06 21:00,Netanya,participants_event_246875.csv
+event_178867,Tech Meetup #12,Classroom/Workshop,2025-08-01 21:00,Tel Aviv,participants_event_178867.csv
+event_706297,Workshop Session #13,Conference/Professional Event,2025-07-31 21:00,Ashdod,participants_event_706297.csv
+event_774106,Tech Meetup #14,Classroom/Workshop,2025-07-23 21:00,Haifa,participants_event_774106.csv
+event_315301,Tech Meetup #15,Classroom/Workshop,2025-06-25 21:00,Haifa,participants_event_315301.csv
+event_219000,Birthday Party #16,Family/Social Event,2025-08-08 21:00,Jerusalem,participants_event_219000.csv
+event_126964,Birthday Party #17,Conference/Professional Event,2025-07-07 21:00,Ashdod,participants_event_126964.csv
+event_562056,Conference Day #18,Family/Social Event,2025-08-03 21:00,Tel Aviv,participants_event_562056.csv
+event_912421,Tech Meetup #19,Classroom/Workshop,2025-07-19 21:00,Tel Aviv,participants_event_912421.csv
+event_662855,Conference Day #20,Conference/Professional Event,2025-07-05 21:00,Jerusalem,participants_event_662855.csv
+event_326868,Tech Meetup #21,Conference/Professional Event,2025-07-15 21:00,Ashdod,participants_event_326868.csv
+event_720448,Family Gathering #22,Conference/Professional Event,2025-06-20 21:00,Tel Aviv,participants_event_720448.csv
+event_487612,Birthday Party #23,Family/Social Event,2025-08-01 21:00,Ashdod,participants_event_487612.csv
+event_503248,Workshop Session #24,Family/Social Event,2025-06-27 21:00,Jerusalem,participants_event_503248.csv
+event_328629,Workshop Session #25,Family/Social Event,2025-07-27 21:00,Jerusalem,participants_event_328629.csv
+event_476905,Tech Meetup #26,Conference/Professional Event,2025-07-11 21:00,Tel Aviv,participants_event_476905.csv
+event_558130,Conference Day #27,Classroom/Workshop,2025-07-24 21:00,Netanya,participants_event_558130.csv
+event_616787,Workshop Session #28,Family/Social Event,2025-07-21 21:00,Jerusalem,participants_event_616787.csv
+event_194907,Birthday Party #29,Classroom/Workshop,2025-06-24 21:00,Netanya,participants_event_194907.csv
+event_824062,Family Gathering #30,Conference/Professional Event,2025-06-22 21:00,Ashdod,participants_event_824062.csv

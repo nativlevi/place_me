@@ -90,7 +90,7 @@ class _ManagerDetailsUpdateScreenState
       }
 
       final path = result.files.single.path!;
-      final ext  = result.files.single.extension?.toLowerCase();
+      final ext = result.files.single.extension?.toLowerCase();
 
       // 1) רק עדכון ה־state – בלי await כאן!
       setState(() {
@@ -101,7 +101,7 @@ class _ManagerDetailsUpdateScreenState
       if (ext == 'xlsx') {
         await _parseXlsx(path); // Future<void> – זה תקין
       } else {
-        await _parseCsv(path);  // Future<void> – גם זה
+        await _parseCsv(path); // Future<void> – גם זה
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -109,8 +109,6 @@ class _ManagerDetailsUpdateScreenState
       );
     }
   }
-
-
 
   Future<void> _parseCsv(String path) async {
     try {
@@ -127,11 +125,29 @@ class _ManagerDetailsUpdateScreenState
           .split(RegExp(r'\r?\n'))
           .where((line) => line.trim().isNotEmpty)
           .toList();
-      if (lines.length < 2) return;
+      if (lines.length < 2) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('הקובץ ריק או אין מספיק נתונים')),
+        );
+        return;
+      }
 
       String headerLine = lines.first;
       if (headerLine.startsWith('\uFEFF')) headerLine = headerLine.substring(1);
-      final header = headerLine.split(',');
+      final header =
+          headerLine.split(',').map((e) => e.trim().toLowerCase()).toList();
+
+      final requiredColumns = {'name', 'phone', 'email'};
+      final headerSet = header.toSet();
+
+      if (!requiredColumns.every((col) => headerSet.contains(col))) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'פורמט הקובץ לא תקין. יש לכלול את העמודות: name, phone, email')),
+        );
+        return;
+      }
 
       final nameIdx = header.indexOf('name');
       final phoneIdx = header.indexOf('phone');
@@ -170,14 +186,14 @@ class _ManagerDetailsUpdateScreenState
     }
   }
 
-
   Future<void> _addParticipantsToUsers() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     for (var participant in _parsedCsv) {
       final phone = participant['phone']!;
-      final email = participant['email'] ?? '${phone}@example.com'; // השתמש במייל מהCSV אם קיים
+      final email = participant['email'] ??
+          '${phone}@example.com'; // השתמש במייל מהCSV אם קיים
       final password = 'defaultPassword';
 
       await FirebaseFirestore.instance.collection('users').doc(phone).set({
@@ -221,7 +237,8 @@ class _ManagerDetailsUpdateScreenState
         'eventName': _nameCtrl.text.trim(),
         'location': _locationCtrl.text.trim(),
         'date': DateFormat('yyyy-MM-dd').format(_selectedDate!),
-        'time': '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+        'time':
+            '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
         'createdAt': FieldValue.serverTimestamp(),
         'preferenceDeadline': deadline.toIso8601String(),
       });
@@ -229,7 +246,8 @@ class _ManagerDetailsUpdateScreenState
       final csvPath = _csvResult?.files.single.path;
       if (csvPath != null) {
         final f = File(csvPath);
-        final ref = FirebaseStorage.instance.ref('events/${docRef.id}/participants.csv');
+        final ref = FirebaseStorage.instance
+            .ref('events/${docRef.id}/participants.csv');
         await ref.putFile(f);
         final url = await ref.getDownloadURL();
         await docRef.update({'participantFileUrl': url});
@@ -238,7 +256,9 @@ class _ManagerDetailsUpdateScreenState
       final allParticipants = [..._parsedCsv, ..._manualParticipants];
 
       final participantPhones = allParticipants
-          .map((p) => p['phone']!.startsWith('+') ? p['phone']! : '+972${p['phone']!.substring(1)}')
+          .map((p) => p['phone']!.startsWith('+')
+              ? p['phone']!
+              : '+972${p['phone']!.substring(1)}')
           .toSet()
           .toList();
 
@@ -259,7 +279,9 @@ class _ManagerDetailsUpdateScreenState
       // שומרים את המשתתפים ב-firestore ויוצרים מיילים ייחודיים
       for (var p in uniqueParticipants) {
         final name = p['name']!;
-        final phone = p['phone']!.startsWith('+') ? p['phone']! : '+972${p['phone']!.substring(1)}';
+        final phone = p['phone']!.startsWith('+')
+            ? p['phone']!
+            : '+972${p['phone']!.substring(1)}';
         final email = p['email']?.trim();
 
         await docRef.collection('participants').add({
@@ -278,7 +300,8 @@ class _ManagerDetailsUpdateScreenState
               'subject': 'You have been invited to an event',
               'text': 'שלום $name,\n'
                   'הוזמנת לאירוע ${_nameCtrl.text.trim()} במיקום ${_locationCtrl.text.trim()}.\n'
-                  'אנא התקן את אפליקצית PlaceMe והירשם.'
+                  'אנא התקן את אפליקצית PlaceMe מחנות האפליקציות והירשם.'
+                  '.יש למלא העדפות אישיות למיקום הושבתך עד 48 שעות לפני מועד האירוע'
             }
           });
         }
@@ -295,7 +318,8 @@ class _ManagerDetailsUpdateScreenState
         'eventType': _eventType,
         'location': _locationCtrl.text.trim(),
         'date': DateFormat('yyyy-MM-dd').format(_selectedDate!),
-        'time': '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+        'time':
+            '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -315,10 +339,7 @@ class _ManagerDetailsUpdateScreenState
   }
 
   Future<void> _addAllowedUser(String phone, String eventId) async {
-    await FirebaseFirestore.instance
-        .collection('events')
-        .doc(eventId)
-        .update({
+    await FirebaseFirestore.instance.collection('events').doc(eventId).update({
       'allowedParticipants': FieldValue.arrayUnion([phone]),
     });
 
@@ -347,8 +368,9 @@ class _ManagerDetailsUpdateScreenState
     if (sheet == null || sheet.maxRows < 2) return;
 
     // כותרות בשורה הראשונה
-    final header = sheet.row(0).map((e) => e?.value.toString().toLowerCase()).toList();
-    final nameIdx  = header.indexOf('name');
+    final header =
+        sheet.row(0).map((e) => e?.value.toString().toLowerCase()).toList();
+    final nameIdx = header.indexOf('name');
     final phoneIdx = header.indexOf('phone');
     final emailIdx = header.indexOf('mail') >= 0
         ? header.indexOf('mail')
@@ -363,7 +385,7 @@ class _ManagerDetailsUpdateScreenState
 
     for (var i = 1; i < sheet.maxRows; i++) {
       final row = sheet.row(i);
-      final name  = row[nameIdx]?.value.toString().trim() ?? '';
+      final name = row[nameIdx]?.value.toString().trim() ?? '';
       final phone = row[phoneIdx]?.value.toString().trim() ?? '';
       String rawEmail = '';
       if (emailIdx >= 0 && emailIdx < row.length) {
@@ -379,9 +401,6 @@ class _ManagerDetailsUpdateScreenState
     setState(() => _parsedCsv = tmp);
     await _addParticipantsToUsers();
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -399,7 +418,8 @@ class _ManagerDetailsUpdateScreenState
             fontWeight: FontWeight.bold,
             color: Color(0xFF727D73),
           ),
-        ),      ),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -408,7 +428,11 @@ class _ManagerDetailsUpdateScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Event Type: $_eventType', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF3D3D3D))),
+                Text('Event Type: $_eventType',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF3D3D3D))),
                 SizedBox(height: 20),
                 TextFormField(
                   controller: _nameCtrl,
@@ -417,33 +441,44 @@ class _ManagerDetailsUpdateScreenState
                     hintText: 'Enter Event Name',
                     filled: true,
                     fillColor: Colors.white,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none),
                   ),
-                  validator: (v) => v == null || v.isEmpty ? 'נא למלא שם אירוע' : null,
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'נא למלא שם אירוע' : null,
                 ),
                 SizedBox(height: 20),
                 TextFormField(
                   controller: _locationCtrl,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
+                    prefixIcon:
+                        Icon(Icons.location_on, color: Color(0xFF3D3D3D)),
                     hintText: 'Enter Location',
                     filled: true,
                     fillColor: Colors.white,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none),
                   ),
-                  validator: (v) => v == null || v.isEmpty ? 'נא למלא מיקום' : null,
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'נא למלא מיקום' : null,
                 ),
                 SizedBox(height: 20),
                 Row(
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _pickDate,                        style: ElevatedButton.styleFrom(
+                        onPressed: _pickDate,
+                        style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF3D3D3D),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30)),
                         ),
                         child: Text(
-                          _selectedDate == null ? 'Select Date' : dateFmt.format(_selectedDate!),
+                          _selectedDate == null
+                              ? 'Select Date'
+                              : dateFmt.format(_selectedDate!),
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -454,10 +489,13 @@ class _ManagerDetailsUpdateScreenState
                         onPressed: _pickTime,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF3D3D3D),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30)),
                         ),
                         child: Text(
-                          _selectedTime == null ? 'Select Time' : '${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+                          _selectedTime == null
+                              ? 'Select Time'
+                              : '${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -465,18 +503,22 @@ class _ManagerDetailsUpdateScreenState
                   ],
                 ),
                 SizedBox(height: 20),
-                Text('Upload a participant list in CSV format.', style: TextStyle(fontSize: 16, color: Color(0xFF727D73))),
+                Text('Upload a participant list in CSV format.',
+                    style: TextStyle(fontSize: 16, color: Color(0xFF727D73))),
                 SizedBox(height: 10),
                 ElevatedButton.icon(
                   onPressed: _pickFile,
                   icon: Icon(Icons.upload_file, color: Colors.white),
                   label: Text(
-                      _csvResult == null ? 'בחר קובץ CSV/XLSX' : '${_csvResult!.files.single.name} נבחר',
+                    _csvResult == null
+                        ? 'בחר קובץ CSV/XLSX'
+                        : '${_csvResult!.files.single.name} נבחר',
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF3D3D3D),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30)),
                   ),
                 ),
                 if (_csvResult != null)
@@ -484,7 +526,8 @@ class _ManagerDetailsUpdateScreenState
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Chip(
                       backgroundColor: Colors.green.shade50,
-                      avatar: Icon(Icons.insert_drive_file, color: Color(0xFF4A7C59)),
+                      avatar: Icon(Icons.insert_drive_file,
+                          color: Color(0xFF4A7C59)),
                       label: Text(
                         _csvResult!.files.single.name,
                         style: TextStyle(color: Colors.green.shade800),
@@ -494,7 +537,8 @@ class _ManagerDetailsUpdateScreenState
                 SizedBox(height: 10),
                 TextButton(
                   onPressed: () {
-                    Navigator.push(context,
+                    Navigator.push(
+                      context,
                       MaterialPageRoute(builder: (_) => GuideScreen()),
                     );
                   },
@@ -526,8 +570,10 @@ class _ManagerDetailsUpdateScreenState
                         controller: _participantNameCtrl,
                         decoration: InputDecoration(
                           hintText: 'Name',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 12),
                         ),
                       ),
                     ),
@@ -536,11 +582,13 @@ class _ManagerDetailsUpdateScreenState
                     // Phone
                     Expanded(
                       child: TextField(
-                        controller: _participantNameCtrl,
+                        controller: _participantPhoneCtrl,
                         decoration: InputDecoration(
                           hintText: 'Phone ',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 12),
                         ),
                       ),
                     ),
@@ -549,11 +597,13 @@ class _ManagerDetailsUpdateScreenState
                     // Email
                     Expanded(
                       child: TextField(
-                        controller: _participantNameCtrl,
+                        controller: _participantEmailCtrl,
                         decoration: InputDecoration(
                           hintText: 'Email',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 12),
                         ),
                       ),
                     ),
@@ -562,7 +612,7 @@ class _ManagerDetailsUpdateScreenState
                     // Add button
                     ElevatedButton(
                       onPressed: () {
-                        final name  = _participantNameCtrl.text.trim();
+                        final name = _participantNameCtrl.text.trim();
                         final phone = _participantPhoneCtrl.text.trim();
                         final email = _participantEmailCtrl.text.trim();
                         if (name.isEmpty || phone.isEmpty || email.isEmpty) {
@@ -571,7 +621,7 @@ class _ManagerDetailsUpdateScreenState
                         }
                         setState(() {
                           _manualParticipants.add({
-                            'name':  name,
+                            'name': name,
                             'phone': phone,
                             'email': email,
                           });
@@ -582,8 +632,10 @@ class _ManagerDetailsUpdateScreenState
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3D3D3D),
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 20),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
                       ),
                       child: const Icon(Icons.add, color: Colors.white),
                     ),
@@ -599,15 +651,21 @@ class _ManagerDetailsUpdateScreenState
                     itemBuilder: (ctx, i) {
                       final p = _manualParticipants[i];
                       return Card(
-                        color: Colors.white.withOpacity(0.8),  // כאן מגדירים שקיפות של 80%
+                        color: Colors.white
+                            .withOpacity(0.8), // כאן מגדירים שקיפות של 80%
                         margin: const EdgeInsets.symmetric(vertical: 4),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
                         child: ListTile(
-                          leading: const Icon(Icons.person, color: Color(0xFF3D3D3D)),
-                          title: Text(p['name']!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          leading: const Icon(Icons.person,
+                              color: Color(0xFF3D3D3D)),
+                          title: Text(p['name']!,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Text('${p['phone']} • ${p['email']}'),
                           trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Color(0xFF3D3D3D)),
+                            icon: const Icon(Icons.delete,
+                                color: Color(0xFF3D3D3D)),
                             onPressed: () {
                               setState(() {
                                 _manualParticipants.removeAt(i);
@@ -619,18 +677,24 @@ class _ManagerDetailsUpdateScreenState
                     },
                   ),
                 ],
-
                 SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
                     onPressed: _isSaving ? null : _saveEvent,
                     child: _isSaving
-                        ? CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
-                        : Text('Submit', style: TextStyle(color: Colors.white,fontSize: 18, fontWeight: FontWeight.bold)),
+                        ? CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white)
+                        : Text('Submit',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF3D3D3D),
-                      padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
                     ),
                   ),
                 ),
