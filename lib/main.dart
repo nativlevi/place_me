@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import '../firebase/firebase_options.dart';
-import '../manager/manager_home_screen.dart';
-import 'loading.dart';
-import '../manager/manager_login.dart';
-import '../manager/manager_signup.dart';
-import '../manager/manager_event_type_screen.dart';
-import '../manager/manager_event_details_screen.dart';
-import '../participant/participant_login.dart';
-import '../participant/participant_signup.dart';
-import 'guide_screen.dart';
-import '../participant/preferences_screen.dart';
-import 'splash_screen.dart';
+import 'firebase/firebase_options.dart';
+import 'manager/manager_home_screen.dart';
+import 'general/loading.dart';
+import 'manager/manager_login.dart';
+import 'manager/manager_signup.dart';
+import 'manager/manager_event_type_screen.dart';
+import 'manager/manager_event_details_screen.dart';
+import 'participant/participant_login.dart';
+import 'participant/participant_signup.dart';
+import 'general/guide_screen.dart';
+import 'participant/preferences_screen.dart';
+import 'general/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
