@@ -10,11 +10,8 @@ void main() {
     app.main();
     await tester.pumpAndSettle();
 
-    // ודא שאנחנו במסך הראשי
-    expect(find.text('Manager'), findsOneWidget);
-
     // לחץ על "Manager"
-    await tester.tap(find.text('Manager'));
+    await tester.tap(find.textContaining('Manager'));
     await tester.pumpAndSettle();
 
     // במסך login של המנהל, לחץ על "SIGN UP"

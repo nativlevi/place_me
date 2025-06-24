@@ -55,7 +55,7 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
         final value = seatMap[widget.highlightPhone];
         if (value != null) {
           setState(() => highlightChairIndex =
-              value is int ? value : int.tryParse(value.toString()));
+          value is int ? value : int.tryParse(value.toString()));
         }
       }
     });
@@ -113,7 +113,7 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
         .collection('elements');
 
     final toDuplicate =
-        elements.where((e) => _selectedIds.contains(e['id'])).toList();
+    elements.where((e) => _selectedIds.contains(e['id'])).toList();
     final List<Map<String, dynamic>> newOnes = [];
 
     for (var e in toDuplicate) {
@@ -156,7 +156,7 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
 
   Widget _buildOptionsSheet() {
     final allFeatures =
-        _featuresByType.values.expand((l) => l).toSet().toList();
+    _featuresByType.values.expand((l) => l).toSet().toList();
 
     return SafeArea(
       child: DraggableScrollableSheet(
@@ -212,12 +212,12 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
                       _buildCardOption(
                         Icons.event_seat,
                         'כיסא',
-                        () => _addElement('chair'),
+                            () => _addElement('chair'),
                       ),
                       _buildCardOption(
                         Icons.table_restaurant,
                         'שולחן',
-                        () => _addElement('table'),
+                            () => _addElement('table'),
                       ),
                       const Divider(height: 32),
                       _buildCardOption(
@@ -371,7 +371,7 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
     final bool selected = _selectedIds.contains(e['id']);
     final isChair = e['type'] == 'chair';
     final int? chairIndex =
-        e['index'] is int ? e['index'] : int.tryParse('${e['index'] ?? ''}');
+    e['index'] is int ? e['index'] : int.tryParse('${e['index'] ?? ''}');
     final bool isHighlighted = isChair &&
         highlightChairIndex != null &&
         chairIndex == highlightChairIndex;
@@ -383,56 +383,56 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
         onTap: widget.readOnly
             ? null
             : (e['type'] == 'chair'
-                ? () => _editChairFeatures(e)
-                : e['type'] == 'table'
-                    ? () => _editTableShape(e)
-                    : null),
+            ? () => _editChairFeatures(e)
+            : e['type'] == 'table'
+            ? () => _editTableShape(e)
+            : null),
         onLongPress: widget.readOnly ? null : () => _removeElement(e['id']),
         child: widget.readOnly
             ? _elementIcon(e, selected, isHighlighted)
             : Draggable<Map<String, dynamic>>(
-                data: e,
-                childWhenDragging: Container(),
-                onDragEnd: (details) async {
-                  if (widget.readOnly) return;
-                  if (_selectedIds.isEmpty || !_selectedIds.contains(e['id'])) {
-                    final box = _stackKey.currentContext?.findRenderObject()
-                        as RenderBox?;
-                    if (box == null) return;
-                    final local = box.globalToLocal(details.offset);
-                    await _moveSingle(e, local);
-                    return;
-                  }
-                  final box = context.findRenderObject() as RenderBox;
-                  final local = box.globalToLocal(details.offset);
-                  final w = (e['w'] ?? 40.0) as double;
-                  final h = (e['h'] ?? 40.0) as double;
-                  final alignedOffset = local - Offset(w / 2, h / 2);
-                  final delta = local - pos;
-                  final batch = FirebaseFirestore.instance.batch();
-                  final col = FirebaseFirestore.instance
-                      .collection('events')
-                      .doc(widget.eventId)
-                      .collection('elements');
-                  setState(() {
-                    for (var elm in elements) {
-                      if (_selectedIds.contains(elm['id'])) {
-                        final oldX = (elm['x'] as num?)?.toDouble() ?? 0.0;
-                        final oldY = (elm['y'] as num?)?.toDouble() ?? 0.0;
-                        final newX = oldX + delta.dx;
-                        final newY = oldY + delta.dy;
-                        elm['x'] = newX;
-                        elm['y'] = newY;
-                        batch
-                            .update(col.doc(elm['id']), {'x': newX, 'y': newY});
-                      }
-                    }
-                  });
-                  await batch.commit();
-                },
-                child: _elementIcon(e, selected, isHighlighted),
-                feedback: _elementIcon(e, selected, isHighlighted),
-              ),
+          data: e,
+          childWhenDragging: Container(),
+          onDragEnd: (details) async {
+            if (widget.readOnly) return;
+            if (_selectedIds.isEmpty || !_selectedIds.contains(e['id'])) {
+              final box = _stackKey.currentContext?.findRenderObject()
+              as RenderBox?;
+              if (box == null) return;
+              final local = box.globalToLocal(details.offset);
+              await _moveSingle(e, local);
+              return;
+            }
+            final box = context.findRenderObject() as RenderBox;
+            final local = box.globalToLocal(details.offset);
+            final w = (e['w'] ?? 40.0) as double;
+            final h = (e['h'] ?? 40.0) as double;
+            final alignedOffset = local - Offset(w / 2, h / 2);
+            final delta = local - pos;
+            final batch = FirebaseFirestore.instance.batch();
+            final col = FirebaseFirestore.instance
+                .collection('events')
+                .doc(widget.eventId)
+                .collection('elements');
+            setState(() {
+              for (var elm in elements) {
+                if (_selectedIds.contains(elm['id'])) {
+                  final oldX = (elm['x'] as num?)?.toDouble() ?? 0.0;
+                  final oldY = (elm['y'] as num?)?.toDouble() ?? 0.0;
+                  final newX = oldX + delta.dx;
+                  final newY = oldY + delta.dy;
+                  elm['x'] = newX;
+                  elm['y'] = newY;
+                  batch
+                      .update(col.doc(elm['id']), {'x': newX, 'y': newY});
+                }
+              }
+            });
+            await batch.commit();
+          },
+          child: _elementIcon(e, selected, isHighlighted),
+          feedback: _elementIcon(e, selected, isHighlighted),
+        ),
       ),
     );
   }
@@ -441,7 +441,7 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
     if (_eventType == null) return;
     final opts = _featuresByType[_eventType!] ?? [];
     final selected =
-        Set<String>.from((chair['features'] ?? []) as List<dynamic>);
+    Set<String>.from((chair['features'] ?? []) as List<dynamic>);
     final result = await showDialog<Set<String>>(
       context: context,
       builder: (_) => AlertDialog(
@@ -528,7 +528,7 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
   BoxDecoration _backgroundForEventType() {
     return BoxDecoration(
       image: DecorationImage(
-        image: AssetImage('images/background.webp'),
+        image: AssetImage('assets/background.webp'),
         fit: BoxFit.cover,
         colorFilter: ColorFilter.mode(
           Colors.white.withOpacity(0.6),
@@ -569,37 +569,37 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
         onPanStart: widget.readOnly
             ? null
             : (d) {
-                setState(() {
-                  _dragStart = d.localPosition;
-                  _selectionRect = Rect.fromLTWH(
-                      d.localPosition.dx, d.localPosition.dy, 0, 0);
-                });
-              },
+          setState(() {
+            _dragStart = d.localPosition;
+            _selectionRect = Rect.fromLTWH(
+                d.localPosition.dx, d.localPosition.dy, 0, 0);
+          });
+        },
         onPanUpdate: widget.readOnly
             ? null
             : (d) {
-                setState(() {
-                  final cur = d.localPosition;
-                  _selectionRect = Rect.fromPoints(_dragStart!, cur);
-                });
-              },
+          setState(() {
+            final cur = d.localPosition;
+            _selectionRect = Rect.fromPoints(_dragStart!, cur);
+          });
+        },
         onPanEnd: widget.readOnly
             ? null
             : (_) {
-                final sel = <String>{};
-                final rect = _selectionRect;
-                if (rect != null) {
-                  for (var e in elements) {
-                    final x = e['x'] as double;
-                    final y = e['y'] as double;
-                    if (rect.contains(Offset(x, y))) sel.add(e['id']);
-                  }
-                }
-                setState(() {
-                  _selectedIds = sel;
-                  _selectionRect = null;
-                });
-              },
+          final sel = <String>{};
+          final rect = _selectionRect;
+          if (rect != null) {
+            for (var e in elements) {
+              final x = e['x'] as double;
+              final y = e['y'] as double;
+              if (rect.contains(Offset(x, y))) sel.add(e['id']);
+            }
+          }
+          setState(() {
+            _selectedIds = sel;
+            _selectionRect = null;
+          });
+        },
         child: Container(
           decoration: _backgroundForEventType(),
           child: Stack(
@@ -623,12 +623,12 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
       floatingActionButton: widget.readOnly
           ? null
           : FloatingActionButton(
-              child: Icon(Icons.more_vert),
-              onPressed: () => showModalBottomSheet(
-                context: context,
-                builder: (_) => _buildOptionsSheet(),
-              ),
-            ),
+        child: Icon(Icons.more_vert),
+        onPressed: () => showModalBottomSheet(
+          context: context,
+          builder: (_) => _buildOptionsSheet(),
+        ),
+      ),
     );
   }
 
@@ -814,7 +814,7 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
         width: 40,
         height: 40,
         decoration:
-            BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+        BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
         child: Icon(Icons.event_seat, size: 24, color: Colors.white),
       );
     } else if (type == 'feature') {
@@ -878,7 +878,7 @@ class _InteractiveRoomEditorState extends State<InteractiveRoomEditor> {
 
   Future<void> _alignSelectionToTable() async {
     final table =
-        elements.firstWhere((e) => e['type'] == 'table', orElse: () => {});
+    elements.firstWhere((e) => e['type'] == 'table', orElse: () => {});
     if (table.isEmpty) return;
 
     final double tableY = table['y'];

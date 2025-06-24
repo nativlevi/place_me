@@ -42,13 +42,13 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
   String getIconForEventType(String type) {
     switch (type) {
       case 'Classroom/Workshop':
-        return 'images/classroom.png';
+        return 'assets/classroom.png';
       case 'Family/Social Event':
-        return 'images/family_Event.png';
+        return 'assets/family_Event.png';
       case 'Conference/Professional Event':
-        return 'images/Professional_Event.png';
+        return 'assets/Professional_Event.png';
       default:
-        return 'images/default_icon.png';
+        return 'assets/default_icon.png';
     }
   }
 
@@ -109,8 +109,7 @@ class _ParticipantEventsScreenState extends State<ParticipantEventsScreen> {
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('events')
-                    .where('allowedParticipants',
-                        arrayContains: normalizedPhone)
+                    .where('allowedParticipants', arrayContains: normalizedPhone)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {

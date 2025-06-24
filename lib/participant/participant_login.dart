@@ -96,7 +96,7 @@ class _ParticipantLoginScreenState extends State<ParticipantLoginScreen> {
                   ),
                 ),
                 Image.asset(
-                  'images/icon.png',
+                  'assets/icon.png',
                   height: 250,
                 ),
                 Row(

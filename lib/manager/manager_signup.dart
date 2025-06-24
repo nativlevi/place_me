@@ -103,7 +103,7 @@ class _ManagerRegisterScreenState extends State<ManagerRegisterScreen> {
                     ),
                   ),
                   Image.asset(
-                    'images/icon.png',
+                    'assets/icon.png',
                     height: 250,
                   ),
                   Row(

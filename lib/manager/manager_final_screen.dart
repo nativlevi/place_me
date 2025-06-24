@@ -1,24 +1,17 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
-
+import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:csv/csv.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ManagerFinalScreen extends StatelessWidget {
   final String eventId;
-  const ManagerFinalScreen({Key? key, required this.eventId}) : super(key: key);
-
-  // פונקציית נרמול טלפון - מסירה רווחים, דואגת לפורמט קבוע עם "+".
-  String normalizePhone(String phone) {
-    var p = phone.replaceAll(RegExp(r'[\s\-\.]'), '');
-    if (p.startsWith('00')) p = '+' + p.substring(2);
-    if (p.startsWith('972') && !p.startsWith('+')) p = '+$p';
-    if (p.startsWith('0')) p = '+972' + p.substring(1);
-    if (!p.startsWith('+')) p = '+$p';
-    return p;
-  }
+  const ManagerFinalScreen({Key? key, required this.eventId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +41,7 @@ class ManagerFinalScreen extends StatelessWidget {
           final eventData = eventSnap.data!.data() as Map<String, dynamic>;
           final seating = Map<String, dynamic>.from(eventData['seating'] ?? {});
           final participants =
-              List<String>.from(eventData['allowedParticipants'] ?? []);
+          List<String>.from(eventData['allowedParticipants'] ?? []);
 
           if (seating.isEmpty) {
             return Center(child: Text('No seating plan yet'));
@@ -69,107 +62,94 @@ class ManagerFinalScreen extends StatelessWidget {
               for (var doc in prefSnap.data!.docs) {
                 final path = doc.reference.path.split('/');
                 final uid = path[path.indexOf('users') + 1];
-                prefsMap[normalizePhone(uid)] =
-                    doc.data() as Map<String, dynamic>;
+                prefsMap[uid] = doc.data() as Map<String, dynamic>;
               }
 
-              return FutureBuilder<QuerySnapshot>(
-                future: _db.collection('users').get(),
-                builder: (ctx3, usersSnap) {
-                  if (usersSnap.connectionState == ConnectionState.waiting)
-                    return Center(child: CircularProgressIndicator());
-                  if (usersSnap.hasError)
-                    return Center(child: Text('Error loading users'));
+              return FutureBuilder<Map<String, String>>(
+                future: _loadNamesMap(eventId),
+                builder: (context, namesSnap) {
+                  if (!namesSnap.hasData) return Center(child: CircularProgressIndicator());
+                  final namesMap = namesSnap.data!;
 
-                  final Map<String, String> namesMap = {};
-                  for (var userDoc in usersSnap.data!.docs) {
-                    final data = userDoc.data() as Map<String, dynamic>;
-                    final phoneFromId = normalizePhone(userDoc.id);
-                    final phoneFromField =
-                        normalizePhone(data['phone'] ?? userDoc.id);
-                    final name = data['name'] ?? phoneFromId;
-                    namesMap[phoneFromId] = name;
-                    namesMap[phoneFromField] = name;
-                  }
+                  return FutureBuilder<QuerySnapshot>(
+                    future: _db
+                        .collectionGroup('preferences')
+                        .where('eventId', isEqualTo: eventId)
+                        .get(),
+                    builder: (ctx2, prefSnap) {
+                      if (prefSnap.connectionState == ConnectionState.waiting)
+                        return Center(child: CircularProgressIndicator());
+                      if (prefSnap.hasError)
+                        return Center(child: Text('Error loading preferences'));
 
-                  return ListView.builder(
-                    padding: EdgeInsets.all(16),
-                    itemCount: participants.length,
-                    itemBuilder: (ctx4, i) {
-                      final rawPhone = participants[i];
-                      final normalizedPhone = normalizePhone(rawPhone);
-                      final seatInfo = seating[rawPhone];
-                      String seatText;
-                      if (seatInfo is Map) {
-                        seatText =
-                            'Row: ${seatInfo['row']}, Col: ${seatInfo['col']}';
-                      } else {
-                        seatText = 'Chair: $seatInfo';
-                      }
-                      final prefs = prefsMap[normalizedPhone] ?? {};
-
-                      final rawTo = prefs['preferToList'];
-                      final List<String> toList = [];
-                      if (rawTo is Map) {
-                        toList.addAll(rawTo.keys.map((k) => k.toString()));
-                      } else if (rawTo is List) {
-                        toList.addAll(rawTo.map((e) => e.toString()));
+                      final Map<String, Map<String, dynamic>> prefsMap = {};
+                      for (var doc in prefSnap.data!.docs) {
+                        final path = doc.reference.path.split('/');
+                        final uid = path[path.indexOf('users') + 1];
+                        prefsMap[uid] = doc.data() as Map<String, dynamic>;
                       }
 
-                      final rawNot = prefs['preferNotToList'];
-                      final List<String> notToList = [];
-                      if (rawNot is Map) {
-                        notToList.addAll(rawNot.keys.map((k) => k.toString()));
-                      } else if (rawNot is List) {
-                        notToList.addAll(rawNot.map((e) => e.toString()));
-                      }
+                      return ListView.builder(
+                        padding: EdgeInsets.all(16),
+                        itemCount: participants.length,
+                        itemBuilder: (ctx3, i) {
+                          final uid = participants[i];
+                          final displayName = namesMap[uid] ?? uid;
 
-                      final options =
-                          (prefs['options'] as Map<String, dynamic>?) ?? {};
+                          final seatInfo = seating[uid];
+                          String seatText = seatInfo is Map
+                              ? 'Row: ${seatInfo['row']}, Col: ${seatInfo['col']}'
+                              : 'Chair: $seatInfo';
 
-                      final name = namesMap[normalizedPhone] ?? normalizedPhone;
+                          final prefs = prefsMap[uid] ?? {};
 
-                      return Card(
-                        margin: EdgeInsets.symmetric(vertical: 8),
-                        child: Padding(
-                          padding: EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(children: [
-                                Icon(Icons.event_seat),
-                                SizedBox(width: 8),
-                                Text('User: $name',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold)),
-                              ]),
-                              SizedBox(height: 4),
-                              Text(seatText),
-                              if (options.isNotEmpty) ...[
-                                SizedBox(height: 8),
-                                Text('Options:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.w500)),
-                                ...options.entries
-                                    .map((e) => Text('• ${e.key}: ${e.value}')),
-                              ],
-                              if (toList.isNotEmpty) ...[
-                                SizedBox(height: 8),
-                                Text('Prefer to be with:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.w500)),
-                                ...toList.map((u) => Text('• $u')),
-                              ],
-                              if (notToList.isNotEmpty) ...[
-                                SizedBox(height: 8),
-                                Text('Prefer not to be with:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.w500)),
-                                ...notToList.map((u) => Text('• $u')),
-                              ],
-                            ],
-                          ),
-                        ),
+                          final rawTo = prefs['preferToList'];
+                          final toList = (rawTo is Map)
+                              ? rawTo.keys.map((k) => k.toString()).toList()
+                              : (rawTo is List) ? rawTo.map((e) => e.toString()).toList() : [];
+
+                          final rawNot = prefs['preferNotToList'];
+                          final notToList = (rawNot is Map)
+                              ? rawNot.keys.map((k) => k.toString()).toList()
+                              : (rawNot is List) ? rawNot.map((e) => e.toString()).toList() : [];
+
+                          final options = (prefs['options'] as Map<String, dynamic>?) ?? {};
+
+                          return Card(
+                            margin: EdgeInsets.symmetric(vertical: 8),
+                            child: Padding(
+                              padding: EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(children: [
+                                    Icon(Icons.event_seat),
+                                    SizedBox(width: 8),
+                                    Text('User: $displayName',
+                                        style: TextStyle(fontWeight: FontWeight.bold)),
+                                  ]),
+                                  SizedBox(height: 4),
+                                  Text(seatText),
+                                  if (options.isNotEmpty) ...[
+                                    SizedBox(height: 8),
+                                    Text('Options:', style: TextStyle(fontWeight: FontWeight.w500)),
+                                    ...options.entries.map((e) => Text('• ${e.key}: ${e.value}')),
+                                  ],
+                                  if (toList.isNotEmpty) ...[
+                                    SizedBox(height: 8),
+                                    Text('Prefer to be with:', style: TextStyle(fontWeight: FontWeight.w500)),
+                                    ...toList.map((u) => Text('• $u')),
+                                  ],
+                                  if (notToList.isNotEmpty) ...[
+                                    SizedBox(height: 8),
+                                    Text('Prefer not to be with:', style: TextStyle(fontWeight: FontWeight.w500)),
+                                    ...notToList.map((u) => Text('• $u')),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
                   );
@@ -182,100 +162,88 @@ class ManagerFinalScreen extends StatelessWidget {
     );
   }
 
+  Future<Map<String, String>> _loadNamesMap(String eventId) async {
+    final _db = FirebaseFirestore.instance;
+    final Map<String, String> namesMap = {};
+
+    final usersQuery = await _db.collection('users').get();
+    for (var userDoc in usersQuery.docs) {
+      final data = userDoc.data() as Map<String, dynamic>;
+      var rawPhone = (data['phone'] ?? '').toString().trim();
+      final name = (data['name'] ?? '').toString().trim();
+      if (rawPhone.isEmpty) continue;
+
+      if (rawPhone.startsWith('0')) {
+        rawPhone = '+972${rawPhone.substring(1)}';
+      }
+      namesMap[rawPhone] = name;
+    }
+
+    final parts = await _db
+        .collection('events')
+        .doc(eventId)
+        .collection('participants')
+        .get();
+
+    for (var doc in parts.docs) {
+      final data = doc.data();
+      final phone = (data['phone'] ?? '').toString().trim();
+      final name = (data['name'] ?? '').toString().trim();
+      if (phone.isNotEmpty && name.isNotEmpty) {
+        namesMap[phone] = name;
+      }
+    }
+
+    return namesMap;
+  }
+
+
   Future<void> _exportCsv(BuildContext context, String eventId) async {
     final _db = FirebaseFirestore.instance;
     final storage = FirebaseStorage.instance;
 
-    String normalizePhone(String phone) {
-      var p = phone.replaceAll(RegExp(r'[\s\-\.]'), '');
-      if (p.startsWith('00')) p = '+' + p.substring(2);
-      if (p.startsWith('972') && !p.startsWith('+')) p = '+$p';
-      if (p.startsWith('0')) p = '+972' + p.substring(1);
-      if (!p.startsWith('+')) p = '+$p';
-      return p;
-    }
-
     try {
-      // שליפת נתוני האירוע
-      final doc = await _db.collection('events').doc(eventId).get();
-      final eventData = doc.data()!;
-      final seating = Map<String, dynamic>.from(eventData['seating'] ?? {});
-      final participants =
-          List<String>.from(eventData['allowedParticipants'] ?? []);
+      final evDoc = await _db.collection('events').doc(eventId).get();
+      final evData = evDoc.data()!;
+      final seating = Map<String, dynamic>.from(evData['seating'] ?? {});
+      final participants = List<String>.from(evData['allowedParticipants'] ?? []);
 
-      // שליפת העדפות
       final prefQuery = await _db
           .collectionGroup('preferences')
           .where('eventId', isEqualTo: eventId)
           .get();
-
-      final Map<String, Map<String, dynamic>> prefsMap = {};
+      final prefsMap = <String, Map<String, dynamic>>{};
       for (var doc in prefQuery.docs) {
-        final path = doc.reference.path.split('/');
-        final uid = path[path.indexOf('users') + 1];
-        prefsMap[normalizePhone(uid)] = doc.data() as Map<String, dynamic>;
+        final uid = doc.reference.path.split('/')[1]; // assumed path: users/UID/preferences/…
+        prefsMap[uid] = doc.data() as Map<String, dynamic>;
       }
 
-      // שליפת שמות המשתתפים
-      final usersQuery = await _db.collection('users').get();
-      final Map<String, String> namesMap = {};
-      for (var userDoc in usersQuery.docs) {
-        final data = userDoc.data() as Map<String, dynamic>;
-        final phoneFromId = normalizePhone(userDoc.id);
-        final phoneFromField = normalizePhone(data['phone'] ?? userDoc.id);
-        final name = data['name'] ?? phoneFromId;
-        namesMap[phoneFromId] = name;
-        namesMap[phoneFromField] = name;
-      }
+      final namesMap = await _loadNamesMap(eventId);
 
-      // בניית שורות CSV
       final rows = <List<String>>[];
-      rows.add(
-          ['Name', 'Phone', 'Table', 'Chair', 'Prefer To', 'Avoid', 'Options']);
+      rows.add(['Name', 'Phone', 'Table', 'Chair', 'Prefer To', 'Avoid', 'Options']);
 
       for (var phone in participants) {
-        final normalizedPhone = normalizePhone(phone);
-        final name = namesMap[normalizedPhone] ?? normalizedPhone;
+        final name = namesMap[phone] ?? phone;
         final seat = seating[phone];
-        final prefs = prefsMap[normalizedPhone] ?? {};
+        final prefs = prefsMap[phone] ?? {};
 
-        // העדפה לשבת עם
-        final rawTo = prefs['preferToList'];
-        final toList = (rawTo is Map)
-            ? rawTo.keys.map((k) => k.toString()).toList()
-            : (rawTo is List)
-                ? rawTo.map((e) => e.toString()).toList()
-                : [];
-
-        // העדפה לא לשבת עם
-        final rawNot = prefs['preferNotToList'];
-        final notToList = (rawNot is Map)
-            ? rawNot.keys.map((k) => k.toString()).toList()
-            : (rawNot is List)
-                ? rawNot.map((e) => e.toString()).toList()
-                : [];
-
-        // מאפיינים
+        final toList = _extractList(prefs['preferToList']);
+        final notToList = _extractList(prefs['preferNotToList']);
         final options = prefs['options'] ?? {};
-        final optText = (options as Map)
-            .entries
-            .map((e) => '${e.key}=${e.value}')
-            .join('; ');
+        final optText = (options as Map).entries.map((e) => '${e.key}=${e.value}').join('; ');
 
-        String tableStr = '';
-        String chairStr = '';
-
+        String tableStr = '', chairStr = '';
         if (seat is Map) {
           tableStr = seat['row']?.toString() ?? '';
           chairStr = seat['col']?.toString() ?? '';
         } else {
-          tableStr = seat.toString();
-          chairStr = '';
+          tableStr = seat?.toString() ?? '';
         }
 
         rows.add([
           name,
-          normalizedPhone,
+          "'$phone", // כדי למנוע עיבוד אוטומטי באקסל
           tableStr,
           chairStr,
           toList.join(', '),
@@ -287,22 +255,37 @@ class ManagerFinalScreen extends StatelessWidget {
       final csv = const ListToCsvConverter().convert(rows);
       final bytes = utf8.encode(csv);
 
+      // 📌 שמירה ב־Firebase
       final ref = storage.ref().child('events/$eventId/seating_export.csv');
       final upload = await ref.putData(Uint8List.fromList(bytes));
       final url = await upload.ref.getDownloadURL();
+      await _db.collection('events').doc(eventId).update({'seatingExportUrl': url});
 
-      // שמירה במסמך האירוע
-      await _db.collection('events').doc(eventId).update({
-        'seatingExportUrl': url,
-      });
+      // 📌 שמירה מקומית במכשיר
+      final dir = await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/seating_export.csv';
+      final file = File(filePath);
+      await file.writeAsBytes(bytes);
+
+      // 📌 אופציה לשיתוף
+      await Share.shareFiles([filePath], mimeTypes: ['text/csv'], subject: 'Seating Arrangement');
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('CSV exported and saved to Firebase Storage!')),
+        SnackBar(content: Text('✅ CSV saved locally & uploaded')),
       );
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error exporting CSV: $e')),
+        SnackBar(content: Text('❌ Error exporting CSV: $e')),
       );
     }
   }
+
+  List<String> _extractList(dynamic raw) {
+    if (raw is Map) return raw.keys.map((k) => k.toString()).toList();
+    if (raw is List) return raw.map((e) => e.toString()).toList();
+    return [];
+  }
+
+
 }

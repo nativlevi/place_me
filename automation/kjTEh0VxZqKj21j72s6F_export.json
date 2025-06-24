@@ -1,0 +1,367 @@
+{
+  "eventType": "Classroom/Workshop",
+  "preferenceDeadline": "2025-06-28T05:45:00.000",
+  "status": "closed",
+  "time": "05:45",
+  "participantFileUrl": "https://firebasestorage.googleapis.com/v0/b/placeme-firebase.firebasestorage.app/o/events%2FkjTEh0VxZqKj21j72s6F%2Fparticipants.csv?alt=media&token=dc30b42e-e2e9-4137-8e90-26e01350a2a2",
+  "date": "2025-06-30",
+  "score": 0,
+  "location": "as101",
+  "seating": {
+    "+972511234567": 0,
+    "+972526071633": 8,
+    "+972578901234": 2,
+    "+972522345678": 6,
+    "+972556789012": 13,
+    "+972545678901": 9,
+    "+972501234567": 4,
+    "+972589012345": 12,
+    "+972590123456": 7,
+    "+972534567890": 5,
+    "+972567890123": 1,
+    "+972524559623": 10
+  },
+  "eventName": "בדיקה2",
+  "allowedParticipants": [
+    "+972501234567",
+    "+972522345678",
+    "+972534567890",
+    "+972545678901",
+    "+972556789012",
+    "+972567890123",
+    "+972578901234",
+    "+972589012345",
+    "+972590123456",
+    "+972511234567",
+    "+972524559623",
+    "+972526071633"
+  ],
+  "managerId": "DtNrcOw7HFb24UhSsBNdVhoFogb2",
+  "createdAt": "2025-06-15T19:46:08.968000+00:00",
+  "_id": "kjTEh0VxZqKj21j72s6F",
+  "participants": [
+    {
+      "name": "Rina Shapiro",
+      "phone": "+972545678901",
+      "email": "0545678901@example.com",
+      "addedAt": "2025-06-15T19:46:14.674000+00:00",
+      "_id": "5AzFDH5kHXq3SEteNcyA"
+    },
+    {
+      "name": "Nativ Levi",
+      "phone": "+972524559623",
+      "email": "nativl12345@gmail.com",
+      "addedAt": "2025-06-15T19:46:20.868000+00:00",
+      "_id": "6hp00F4kNjKEkkBfMJEN"
+    },
+    {
+      "name": "Neria Atias",
+      "phone": "+972526071633",
+      "email": "neria126@gmail.com",
+      "addedAt": "2025-06-15T19:46:21.703000+00:00",
+      "_id": "D0jFytxZ440oJS3EPWqM"
+    },
+    {
+      "name": "Maya Rosen",
+      "phone": "+972567890123",
+      "email": "0567890123@example.com",
+      "addedAt": "2025-06-15T19:46:16.366000+00:00",
+      "_id": "E1HqYkuAtr5P0AYWMErQ"
+    },
+    {
+      "name": "Amit Cohen",
+      "phone": "+972590123456",
+      "email": "neriaat@ac.sce.ac.il",
+      "addedAt": "2025-06-15T19:46:19.163000+00:00",
+      "_id": "ONKU9IeYqaA3dkQJZazL"
+    },
+    {
+      "name": "Yael Gal",
+      "phone": "+972511234567",
+      "email": "nativle@ac.sce.ac.il",
+      "addedAt": "2025-06-15T19:46:20.052000+00:00",
+      "_id": "RX88ik2cz5bhQbejH55j"
+    },
+    {
+      "name": "Moshe Katz",
+      "phone": "+972534567890",
+      "email": "0534567890@example.com",
+      "addedAt": "2025-06-15T19:46:13.815000+00:00",
+      "_id": "eFDB2Vj549vpHtaEobi1"
+    },
+    {
+      "name": "Yossi Mizrahi",
+      "phone": "+972556789012",
+      "email": "0556789012@example.com",
+      "addedAt": "2025-06-15T19:46:15.522000+00:00",
+      "_id": "eXiZxiBAyJIftKZ68zj8"
+    },
+    {
+      "name": "Eli Ben-David",
+      "phone": "+972578901234",
+      "email": "0578901234@example.com",
+      "addedAt": "2025-06-15T19:46:17.446000+00:00",
+      "_id": "kSULHGsLjxKTFBkIcWAR"
+    },
+    {
+      "name": "David Cohen",
+      "phone": "+972501234567",
+      "email": "0501234567@example.com",
+      "addedAt": "2025-06-15T19:46:11.259000+00:00",
+      "_id": "qrPIFO5r8MeCKfUpfq9h"
+    },
+    {
+      "name": "Leah Peretz",
+      "phone": "+972589012345",
+      "email": "0589012345@example.com",
+      "addedAt": "2025-06-15T19:46:18.304000+00:00",
+      "_id": "sS9kvsaTpsFnYL5C5jAb"
+    },
+    {
+      "name": "Sarah Levy",
+      "phone": "+972522345678",
+      "email": "0522345678@example.com",
+      "addedAt": "2025-06-15T19:46:12.719000+00:00",
+      "_id": "zxikeG9quJXZvi1mZPXb"
+    }
+  ],
+  "elements": [
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972511234567",
+      "id": "7404uflPrASCmjRe7q5R",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 960.0,
+      "features": [],
+      "_id": "7404uflPrASCmjRe7q5R"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972567890123",
+      "id": "9OYU4St3JiI80IOnqQ0H",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 800.0,
+      "features": [],
+      "_id": "9OYU4St3JiI80IOnqQ0H"
+    },
+    {
+      "y": 180.0,
+      "shape": "rectangle",
+      "rotation": 0.0,
+      "id": "AGml836q1IXPkY5lPnnN",
+      "h": 80.0,
+      "w": 120.0,
+      "features": [],
+      "x": 40.0,
+      "type": "table",
+      "_id": "AGml836q1IXPkY5lPnnN"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972578901234",
+      "id": "AKPMoazwlTFCdMgCk5tn",
+      "h": 40.0,
+      "w": 40.0,
+      "features": [],
+      "x": 600.0,
+      "type": "chair",
+      "_id": "AKPMoazwlTFCdMgCk5tn"
+    },
+    {
+      "y": 180.0,
+      "shape": "rectangle",
+      "rotation": 0.0,
+      "id": "BSqM0bfEmagbiympHvVE",
+      "h": 80.0,
+      "w": 120.0,
+      "features": [],
+      "x": 740.0,
+      "type": "table",
+      "_id": "BSqM0bfEmagbiympHvVE"
+    },
+    {
+      "y": 180.0,
+      "shape": "rectangle",
+      "rotation": 0.0,
+      "id": "CkWvymqJ3REdq9MSr6OH",
+      "h": 80.0,
+      "w": 120.0,
+      "type": "table",
+      "x": 960.0,
+      "features": [],
+      "_id": "CkWvymqJ3REdq9MSr6OH"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "id": "DISCMlTZ2AI9rRCuJj9F",
+      "h": 40.0,
+      "w": 40.0,
+      "features": [],
+      "x": 740.0,
+      "type": "chair",
+      "_id": "DISCMlTZ2AI9rRCuJj9F"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972501234567",
+      "id": "F6bNRgAsjKgeYHbJfx0K",
+      "h": 40.0,
+      "w": 40.0,
+      "features": [],
+      "x": 1080.0,
+      "type": "chair",
+      "_id": "F6bNRgAsjKgeYHbJfx0K"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972534567890",
+      "id": "Gr7bsNJciuYLkZ628vq5",
+      "h": 40.0,
+      "w": 40.0,
+      "features": [],
+      "x": 160.0,
+      "type": "chair",
+      "_id": "Gr7bsNJciuYLkZ628vq5"
+    },
+    {
+      "x": 310.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972522345678",
+      "id": "QWkGBdTqX2KsVHNA0w3U",
+      "h": 40.0,
+      "w": 40.0,
+      "features": [],
+      "y": 120.0,
+      "type": "chair",
+      "_id": "QWkGBdTqX2KsVHNA0w3U"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972590123456",
+      "id": "QfjDsx3KzyrCxllIRutH",
+      "h": 40.0,
+      "w": 40.0,
+      "features": [],
+      "x": 540.0,
+      "type": "chair",
+      "_id": "QfjDsx3KzyrCxllIRutH"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972526071633",
+      "id": "SuBkbMQ0Ty2sMqC3EXHu",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 100.0,
+      "features": [],
+      "_id": "SuBkbMQ0Ty2sMqC3EXHu"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972545678901",
+      "id": "eB6gFD7KwhpQjD66z0P9",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 260.0,
+      "features": [],
+      "_id": "eB6gFD7KwhpQjD66z0P9"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972524559623",
+      "id": "gAgC1nrm3xrwOKAYflL0",
+      "h": 40.0,
+      "w": 40.0,
+      "features": [],
+      "x": 40.0,
+      "type": "chair",
+      "_id": "gAgC1nrm3xrwOKAYflL0"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "id": "h5sB65afxg7vKXhg4PKM",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 480.0,
+      "features": [],
+      "_id": "h5sB65afxg7vKXhg4PKM"
+    },
+    {
+      "x": 260.0,
+      "shape": "rectangle",
+      "rotation": 0.0,
+      "id": "lKgzKxBKGFTAftqXbCk3",
+      "h": 80.0,
+      "w": 120.0,
+      "features": [],
+      "y": 180.0,
+      "type": "table",
+      "_id": "lKgzKxBKGFTAftqXbCk3"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972589012345",
+      "id": "n5LwywdEQvtcO6u18fDQ",
+      "h": 40.0,
+      "w": 40.0,
+      "features": [],
+      "x": 360.0,
+      "type": "chair",
+      "_id": "n5LwywdEQvtcO6u18fDQ"
+    },
+    {
+      "x": 500.0,
+      "shape": "rectangle",
+      "rotation": 0.0,
+      "id": "qY1YFjUyEraJFcnl7p9k",
+      "h": 80.0,
+      "w": 120.0,
+      "features": [],
+      "y": 180.0,
+      "type": "table",
+      "_id": "qY1YFjUyEraJFcnl7p9k"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "occupiedBy": "+972556789012",
+      "id": "uwX1B94LvwQdgQHWYMzd",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 1020.0,
+      "features": [],
+      "_id": "uwX1B94LvwQdgQHWYMzd"
+    },
+    {
+      "y": 120.0,
+      "rotation": 0.0,
+      "id": "xZNvaoac1QgApbHnpZ1e",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 860.0,
+      "features": [],
+      "_id": "xZNvaoac1QgApbHnpZ1e"
+    }
+  ]
+}

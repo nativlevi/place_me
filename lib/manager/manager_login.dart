@@ -113,7 +113,7 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                   ),
                 ),
                 Image.asset(
-                  'images/icon.png',
+                  'assets/icon.png',
                   height: 230,
                 ),
                 Row(
@@ -313,7 +313,7 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                 const SizedBox(height: 12),
                 Center(
                   child: SizedBox(
-                    width: 190,      // make the button as wide as you like
+                    width: 210,      // make the button as wide as you like
                     height: 50,      // and a comfortable height
                     child: ElevatedButton.icon(
                       onPressed: signInWithGoogle,
@@ -325,7 +325,7 @@ class _ManagerLoginScreenState extends State<ManagerLoginScreen> {
                         side: BorderSide(color: Colors.grey[300]!),
                         elevation: 2,
                       ),
-                      icon: Image.asset('images/google.png', height: 24),
+                      icon: Image.asset('assets/google.png', height: 24),
                       label: Text(
                         'Sign in with Google',
                         style: TextStyle(

@@ -38,5 +38,5 @@ def export_event(event_id):
 # הרץ את הפונקציה כאן
 if __name__ == "__main__":
     # שנה כאן ל-ID של אירוע שתרצה לייצא
-    EVENT_ID = "הכנס כאן את ה-eventId"
+    EVENT_ID = "kjTEh0VxZqKj21j72s6F"
     export_event(EVENT_ID)

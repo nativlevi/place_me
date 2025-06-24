@@ -12,7 +12,6 @@ import '../participant/participant_signup.dart';
 import 'guide_screen.dart';
 import '../participant/preferences_screen.dart';
 import 'splash_screen.dart';
-import '../participant/add_participant_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,7 +58,6 @@ class _MyAppState extends State<MyApp> {
                 eventId: 'temp',
                 eventName: 'temp',
               ),
-          '/add_participant': (context) => AddParticipantScreen(),
           '/manager_home': (context) => ManagerHomeScreen(),
         },
       ),
@@ -90,7 +88,7 @@ class LoginScreen extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage("images/first_screen.webp"),
+                  image: AssetImage("assets/first.jpg"),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -104,7 +102,7 @@ class LoginScreen extends StatelessWidget {
               child: GestureDetector(
                 onTap: () => navigateToUserGuide(context),
                 child: Icon(
-                  Icons.live_help_outlined,
+                  Icons.help_outline_sharp,
                   color: Colors.white,
                   size: 30.0,
                 ),
@@ -133,7 +131,7 @@ class LoginScreen extends StatelessWidget {
                   SizedBox(height: 50.0),
                   GestureDetector(
                     onTap: () => navigateToManagerLogin(context),
-                    child: buildCustomButton('Manager'),
+                    child: buildCustomButton('Manager  '),
                   ),
                   SizedBox(height: 10.0),
                   GestureDetector(

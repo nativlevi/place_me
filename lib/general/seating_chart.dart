@@ -38,8 +38,8 @@ class SeatingChart extends StatelessWidget {
       final uid = seating.entries
           .firstWhere(
             (e) => e.value['row'] == r && e.value['col'] == c,
-            orElse: () => MapEntry('', {}),
-          )
+        orElse: () => MapEntry('', {}),
+      )
           .key;
       return uid; // "" אם אין שם מישהו
     });

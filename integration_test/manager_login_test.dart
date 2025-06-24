@@ -10,8 +10,8 @@ void main() {
     app.main();
     await tester.pumpAndSettle();
 
-    // לחץ על "Manager"
-    await tester.tap(find.text('Manager'));
+    // 1. כניסה כאדמין
+    await tester.tap(find.textContaining('Manager'));
     await tester.pumpAndSettle();
 
     // ודא שמופיע 'Welcome back'

@@ -141,14 +141,28 @@ class SeatingOptimizer {
     final assign = <String, int>{};
     final usedSeats = List<int>.filled(tables.length, 0);
     final shuffled = [...parties]..shuffle(_rng);
+
     for (var p in shuffled) {
-      final opts = [for (var t = 0; t < tables.length; t++) if (usedSeats[t] + p.size <= tables[t].capacity) t];
+      final opts = [
+        for (var t = 0; t < tables.length; t++)
+          if (usedSeats[t] + p.size <= tables[t].capacity) t
+      ];
+
+      // 🛡️ DEBUG LOGGING
+      if (opts.isEmpty) {
+        print('⚠️ DEBUG: Cannot seat ${p.id} (size: ${p.size}) – usedSeats: $usedSeats');
+        throw Exception('❌ No available table for party "${p.id}" (size: ${p.size})');
+      }
+
       final t = opts[_rng.nextInt(opts.length)];
       assign[p.id] = t;
       usedSeats[t] += p.size;
     }
+
     return assign;
   }
+
+
 
   Map<String, int>? _randomNeighbour(Map<String, int> current) {
     final neighbour = Map<String, int>.from(current);

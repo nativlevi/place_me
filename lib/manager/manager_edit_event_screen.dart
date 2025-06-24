@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:charset_converter/charset_converter.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -149,24 +150,22 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
   }
 
   Future<void> _addParticipantsFromCsv() async {
-    final eventRef =
-        FirebaseFirestore.instance.collection('events').doc(widget.eventId);
+    final eventRef = FirebaseFirestore.instance
+        .collection('events')
+        .doc(widget.eventId);
 
     // 1. תביא את הרשימה הישנה של הטלפונים (או המיילים) – זו רשימת ה־allowedParticipants
     final snapshot = await eventRef.get();
-    final oldAllowed =
-        List<String>.from(snapshot.data()?['allowedParticipants'] ?? []);
+    final oldAllowed = List<String>.from(snapshot.data()?['allowedParticipants'] ?? []);
 
     // 2. בנה קבוצת טלפונים חדשה מה־CSV
     final newPhones = _parsedCsv
         .map((p) => p['phone']!)
-        .map((phone) =>
-            phone.startsWith('+') ? phone : '+972${phone.substring(1)}')
+        .map((phone) => phone.startsWith('+') ? phone : '+972${phone.substring(1)}')
         .toSet();
 
     // 3. חשב מי חדש: פילטר רק את אלו שב־newPhones אבל **לא** ב־oldAllowed
-    final toAdd =
-        newPhones.where((phone) => !oldAllowed.contains(phone)).toList();
+    final toAdd = newPhones.where((phone) => !oldAllowed.contains(phone)).toList();
 
     // 4. מחק קודם, אם זה ההתנהגות שלך
     final existingDocs = await eventRef.collection('participants').get();
@@ -178,10 +177,9 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
     // 5. הוסף את כולם (או רק את toAdd, תלוי האם אתה רוצה לשמור את כל הרשימה או רק את החדשים)
     for (var p in _parsedCsv) {
       final rawPhone = p['phone']!;
-      final phone =
-          rawPhone.startsWith('+') ? rawPhone : '+972${rawPhone.substring(1)}';
+      final phone = rawPhone.startsWith('+') ? rawPhone : '+972${rawPhone.substring(1)}';
       final email = p['email']?.trim() ?? '';
-      final name = p['name']!;
+      final name  = p['name']!;
 
       // הוסף למסד
       await eventRef.collection('participants').add({
@@ -204,8 +202,7 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
             'subject': 'You have been invited to an event',
             'text': 'שלום $name,\n'
                 'הוזמנת לאירוע ${_eventNameController.text.trim()} במיקום ${_locationController.text.trim()}.\n'
-                ' אנא התקן את האפליקציה PlaceMe מחנות האפליקציות והירשם.'
-                'יש למלא העדפות אישיות למיקום הושבתך עד 48 שעות לפני מועד האירוע'
+                'אנא התקן את האפליקציה והירשם.'
           }
         });
       }
@@ -226,9 +223,10 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
     );
   }
 
+
   void _showParticipantsDialog() {
     final eventRef =
-        FirebaseFirestore.instance.collection('events').doc(widget.eventId);
+    FirebaseFirestore.instance.collection('events').doc(widget.eventId);
 
     showModalBottomSheet(
       context: context,
@@ -242,7 +240,7 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
         builder: (context, scrollController) {
           return Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+                color: Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: StreamBuilder<QuerySnapshot>(
@@ -281,31 +279,28 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                           itemCount: docs.length,
                           separatorBuilder: (_, __) => SizedBox(height: 8),
                           itemBuilder: (context, index) {
-                            final p =
-                                docs[index].data()! as Map<String, dynamic>;
+                            final p = docs[index].data()! as Map<String, dynamic>;
                             return Card(
                               elevation: 1,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: ListTile(
-                                leading: Icon(Icons.person,
-                                    color: Color(0xFF727D73)),
+                                leading: Icon(Icons.person, color: Color(0xFF727D73)),
                                 title: Text(
                                   p['name'] ?? '',
                                   style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 subtitle: Text(p['phone'] ?? ''),
                                 trailing: IconButton(
-                                  icon: Icon(Icons.delete,
-                                      color: Color(0xFF3D3D3D)),
+                                  icon: Icon(Icons.delete, color: Color(0xFF3D3D3D)),
                                   onPressed: () async {
                                     final rawPhone =
-                                        p['phone'].toString().trim();
+                                    p['phone'].toString().trim();
                                     await docs[index].reference.delete();
                                     await eventRef.update({
                                       'allowedParticipants':
-                                          FieldValue.arrayRemove([rawPhone]),
+                                      FieldValue.arrayRemove([rawPhone]),
                                     });
                                   },
                                 ),
@@ -318,8 +313,7 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: Color(0xFF3D3D3D),
+                          foregroundColor: Colors.white, backgroundColor: Color(0xFF3D3D3D),
                           padding: EdgeInsets.symmetric(
                               vertical: 14, horizontal: 48),
                           shape: StadiumBorder(),
@@ -344,6 +338,7 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -427,8 +422,7 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                InteractiveRoomEditor(eventId: widget.eventId),
+                            builder: (_) => InteractiveRoomEditor(eventId: widget.eventId),
                           ),
                         );
                       },
@@ -441,14 +435,12 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Color(0xFF3D3D3D), // your purple accent
+                        backgroundColor: Color(0xFF3D3D3D),              // your purple accent
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        padding:
-                            EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-                        elevation: 0, // flat look
+                        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                        elevation: 0,                                     // flat look
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -460,20 +452,15 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                           onPressed: _pickCsv,
                           icon: Icon(Icons.upload_file, color: Colors.white),
                           label: Text(
-                            _csvResult == null
-                                ? 'Choose CSV File'
-                                : 'CSV Selected',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500),
+                            _csvResult == null ? 'Choose New File' : 'CSV Selected',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFF3D3D3D),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
-                            padding: EdgeInsets.symmetric(
-                                vertical: 14, horizontal: 24),
+                            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 24),
                             elevation: 0,
                           ),
                         ),
@@ -483,12 +470,11 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                             padding: const EdgeInsets.only(top: 8),
                             child: Row(
                               children: [
-                                Icon(Icons.insert_drive_file,
-                                    color: Color(0xFF4A7C59)),
+                                Icon(Icons.insert_drive_file, color: Color(0xFF4A7C59)),
                                 SizedBox(width: 8),
                                 Text(
                                   // מוציאים רק את השם של הקובץ
-                                  'Existing file: ${_existingCsvUrl!.split('/').last}',
+                                  'Existing file: participants.csv',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     color: Color(0xFF3D3D3D),
@@ -498,13 +484,15 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                             ),
                           ),
 
+
+
+
                         // אם בחרנו קובץ חדש, איך שהייתה
                         if (_csvResult != null) ...[
                           const SizedBox(height: 12),
                           Chip(
                             backgroundColor: Colors.white.withOpacity(0.8),
-                            avatar: Icon(Icons.insert_drive_file,
-                                color: Color(0xFF4A7C59)),
+                            avatar: Icon(Icons.insert_drive_file, color: Color(0xFF4A7C59)),
                             label: Text(
                               _csvResult!.files.single.name,
                               style: TextStyle(
@@ -520,6 +508,7 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                       ],
                     ),
 
+
                     SizedBox(height: 16),
                     ElevatedButton.icon(
                       onPressed: _showParticipantsDialog,
@@ -532,12 +521,11 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF3D3D3D), // muted teal-green
+                        backgroundColor: Color(0xFF3D3D3D),               // muted teal-green
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        padding:
-                            EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 24),
                         elevation: 0,
                       ),
                     ),
@@ -563,11 +551,9 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                                 borderRadius: BorderRadius.circular(4),
                                 borderSide: BorderSide(color: Colors.grey),
                               ),
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 12),
+                              contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                             ),
-                            validator: (v) =>
-                                v == null || v.isEmpty ? 'Required' : null,
+                            validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -583,11 +569,9 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                                 borderRadius: BorderRadius.circular(4),
                                 borderSide: BorderSide(color: Colors.grey),
                               ),
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 12),
+                              contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                             ),
-                            validator: (v) =>
-                                v == null || v.isEmpty ? 'Required' : null,
+                            validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -603,11 +587,9 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                                 borderRadius: BorderRadius.circular(4),
                                 borderSide: BorderSide(color: Colors.grey),
                               ),
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 12),
+                              contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                             ),
-                            validator: (v) =>
-                                v == null || v.isEmpty ? 'Required' : null,
+                            validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -615,18 +597,13 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                         ElevatedButton(
                           onPressed: () async {
                             final name = _participantNameController.text.trim();
-                            final phone =
-                                _participantPhoneController.text.trim();
-                            final email =
-                                _participantEmailController.text.trim();
+                            final phone = _participantPhoneController.text.trim();
+                            final email = _participantEmailController.text.trim();
 
-                            if (name.isEmpty ||
-                                phone.isEmpty ||
-                                email.isEmpty) {
+                            if (name.isEmpty || phone.isEmpty || email.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                      'Please fill all fields: name, phone, and email'),
+                                  content: Text('Please fill all fields: name, phone, and email'),
                                 ),
                               );
                               return;
@@ -644,18 +621,15 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                                 : '+972${phone.substring(1)}';
 
                             await eventRef.update({
-                              'allowedParticipants':
-                                  FieldValue.arrayUnion([normalized]),
+                              'allowedParticipants': FieldValue.arrayUnion([normalized]),
                             });
 
-                            await FirebaseFirestore.instance
-                                .collection('mail')
-                                .add({
+                            await FirebaseFirestore.instance.collection('mail').add({
                               'to': email,
                               'message': {
                                 'subject': 'You have been invited to an event',
                                 'text':
-                                    'Hi $name,\nYou were added to the event.\nPlease install the app and register.'
+                                'Hi $name,\nYou were added to the event.\nPlease install the app and register.'
                               }
                             });
 
@@ -665,10 +639,8 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF3D3D3D),
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 16, horizontal: 20),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
+                            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                           child: const Icon(Icons.add, color: Colors.white),
                         ),
@@ -686,20 +658,16 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                           return Card(
                             color: Colors.white.withOpacity(0.8),
                             margin: const EdgeInsets.symmetric(vertical: 4),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             child: ListTile(
-                              leading: const Icon(Icons.person,
-                                  color: Color(0xFF3D3D3D)),
+                              leading: const Icon(Icons.person, color: Color(0xFF3D3D3D)),
                               title: Text(
                                 p['name']!,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                               subtitle: Text('${p['phone']} • ${p['email']}'),
                               trailing: IconButton(
-                                icon: const Icon(Icons.delete,
-                                    color: Color(0xFF3D3D3D)),
+                                icon: const Icon(Icons.delete, color: Color(0xFF3D3D3D)),
                                 onPressed: () async {
                                   // 1) Remove from Firestore
                                   await FirebaseFirestore.instance
@@ -720,8 +688,7 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                                       .collection('events')
                                       .doc(widget.eventId)
                                       .update({
-                                    'allowedParticipants':
-                                        FieldValue.arrayRemove([p['phone']])
+                                    'allowedParticipants': FieldValue.arrayRemove([p['phone']])
                                   });
 
                                   // 3) Remove locally so UI updates
@@ -735,6 +702,8 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                         },
                       ),
                     ],
+
+
 
                     // Save changes
                     SizedBox(height: 30),
@@ -758,6 +727,19 @@ class _ManagerEditEventScreenState extends State<ManagerEditEventScreen> {
                           }
 
                           await eventRef.update(updateData);
+                          // עדכון גם באוסף המנהל
+                          await FirebaseFirestore.instance
+                              .collection('managers')
+                              .doc(FirebaseAuth.instance.currentUser!.uid)
+                              .collection('events')
+                              .where('ref', isEqualTo: widget.eventId) // שדה ref מחזיק את מזהה האירוע
+                              .get()
+                              .then((snap) async {
+                            if (snap.docs.isNotEmpty) {
+                              await snap.docs.first.reference.update(updateData);
+                            }
+                          });
+
 
                           ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Event updated')));

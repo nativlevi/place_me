@@ -23,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Color(0xFFefefef),
       body: Center(
         child: Image(
-          image: AssetImage('images/PlaceMe.png'),
+          image: AssetImage('assets/PlaceMe.png'),
           width: 400,
           height: 400,
         ),

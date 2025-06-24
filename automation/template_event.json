@@ -1,0 +1,385 @@
+{
+  "eventType": "Classroom/Workshop",
+  "preferenceDeadline": "2025-07-21T16:25:00.000",
+  "time": "16:25",
+  "participantFileUrl": "https://firebasestorage.googleapis.com/v0/b/placeme-firebase.firebasestorage.app/o/events%2FM9PFzp7LeuGHfHX86ymO%2Fparticipants.csv?alt=media&token=22fa6911-9cf6-48e4-92c1-9f166701b782",
+  "date": "2025-07-23",
+  "eventName": "אירוע 1",
+  "location": "אשדוד",
+  "allowedParticipants": [
+    "+972501234567",
+    "+972522345678",
+    "+972534567890",
+    "+972545678901",
+    "+972556789012",
+    "+972567890123",
+    "+972578901234",
+    "+972589012345",
+    "+972590123456",
+    "+972511234567",
+    "+972524559623",
+    "+972526071633"
+  ],
+  "managerId": "DtNrcOw7HFb24UhSsBNdVhoFogb2",
+  "createdAt": "2025-06-17T10:01:07.181000+00:00",
+  "_id": "M9PFzp7LeuGHfHX86ymO",
+  "participants": [
+    {
+      "name": "Leah Peretz",
+      "phone": "+972589012345",
+      "email": "0589012345@example.com",
+      "addedAt": "2025-06-17T10:01:15.581000+00:00",
+      "_id": "Az5LZcQXuhDGrKpMDRCk"
+    },
+    {
+      "name": "Sarah Levy",
+      "phone": "+972522345678",
+      "email": "0522345678@example.com",
+      "addedAt": "2025-06-17T10:01:10.524000+00:00",
+      "_id": "BggZzyqN4fzycIcFREp5"
+    },
+    {
+      "name": "Maya Rosen",
+      "phone": "+972567890123",
+      "email": "0567890123@example.com",
+      "addedAt": "2025-06-17T10:01:13.929000+00:00",
+      "_id": "EszMVSMtXg8iVLQshoiL"
+    },
+    {
+      "name": "Yael Gal",
+      "phone": "+972511234567",
+      "email": "nativle@ac.sce.ac.il",
+      "addedAt": "2025-06-17T10:01:17.258000+00:00",
+      "_id": "MbeUyW92oZOciNPz26ea"
+    },
+    {
+      "name": "Moshe Katz",
+      "phone": "+972534567890",
+      "email": "0534567890@example.com",
+      "addedAt": "2025-06-17T10:01:11.355000+00:00",
+      "_id": "NXClRn3dipmpQz928hW8"
+    },
+    {
+      "name": "Nativ Levi",
+      "phone": "+972524559623",
+      "email": "nativl12345@gmail.com",
+      "addedAt": "2025-06-17T10:01:18.087000+00:00",
+      "_id": "T2Vc6pCjBY9KDw2ELUT5"
+    },
+    {
+      "name": "Amit Cohen",
+      "phone": "+972590123456",
+      "email": "neriaat@ac.sce.ac.il",
+      "addedAt": "2025-06-17T10:01:16.363000+00:00",
+      "_id": "XWDXkIYBxqvyllieCQ3B"
+    },
+    {
+      "name": "David Cohen",
+      "phone": "+972501234567",
+      "email": "0501234567@example.com",
+      "addedAt": "2025-06-17T10:01:09.727000+00:00",
+      "_id": "blpctj29FjuvbklLFqkr"
+    },
+    {
+      "name": "Yossi Mizrahi",
+      "phone": "+972556789012",
+      "email": "0556789012@example.com",
+      "addedAt": "2025-06-17T10:01:13.094000+00:00",
+      "_id": "eb6Ypszjn7jnkXEQ7x0L"
+    },
+    {
+      "name": "Eli Ben-David",
+      "phone": "+972578901234",
+      "email": "0578901234@example.com",
+      "addedAt": "2025-06-17T10:01:14.760000+00:00",
+      "_id": "gzec9wqQf8xo2012vrtW"
+    },
+    {
+      "name": "Rina Shapiro",
+      "phone": "+972545678901",
+      "email": "0545678901@example.com",
+      "addedAt": "2025-06-17T10:01:12.252000+00:00",
+      "_id": "l0OeAPBT9MQQcZtTUAgW"
+    },
+    {
+      "name": "Neria Atias",
+      "phone": "+972526071633",
+      "email": "neria126@gmail.com",
+      "addedAt": "2025-06-17T10:01:19.183000+00:00",
+      "_id": "louA8io7L1sc0a4WjZWU"
+    }
+  ],
+  "elements": [
+    {
+      "features": [
+        "Board",
+        "Window"
+      ],
+      "rotation": 0.0,
+      "id": "20ryEsWNlWBJPGZvCBTH",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "y": 40.0,
+      "x": 400.0,
+      "_id": "20ryEsWNlWBJPGZvCBTH"
+    },
+    {
+      "y": 240.0,
+      "shape": "rectangle",
+      "rotation": 0.0,
+      "id": "4oEmjHDcvnovdeZiF06Q",
+      "h": 80.0,
+      "w": 120.0,
+      "type": "table",
+      "x": 60.0,
+      "features": [],
+      "_id": "4oEmjHDcvnovdeZiF06Q"
+    },
+    {
+      "features": [
+        "Board"
+      ],
+      "rotation": 0.0,
+      "id": "54wbnj1DkM7cbZ8qZrOX",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 160.0,
+      "y": 40.0,
+      "_id": "54wbnj1DkM7cbZ8qZrOX"
+    },
+    {
+      "features": [
+        "Window"
+      ],
+      "rotation": 0.0,
+      "id": "A10MyXdzV9AcE9DXrrlY",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "y": 300.0,
+      "x": 440.0,
+      "_id": "A10MyXdzV9AcE9DXrrlY"
+    },
+    {
+      "y": 300.0,
+      "rotation": 0.0,
+      "id": "ArqRcwuaAIhxZGcDzrfV",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 380.0,
+      "features": [],
+      "_id": "ArqRcwuaAIhxZGcDzrfV"
+    },
+    {
+      "features": [
+        "Air Conditioner"
+      ],
+      "rotation": 0.0,
+      "id": "FTfL2uNst9YFwV5QbKhN",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 390.0,
+      "y": 200.0,
+      "_id": "FTfL2uNst9YFwV5QbKhN"
+    },
+    {
+      "features": [
+        "Board"
+      ],
+      "rotation": 0.0,
+      "id": "GNhZ36wbNBOfFxJchRw0",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "y": 40.0,
+      "x": 280.0,
+      "_id": "GNhZ36wbNBOfFxJchRw0"
+    },
+    {
+      "features": [
+        "Board",
+        "Entrance"
+      ],
+      "rotation": 0.0,
+      "id": "PAo0RopRJWeZodttuqcL",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "y": 40.0,
+      "x": 60.0,
+      "_id": "PAo0RopRJWeZodttuqcL"
+    },
+    {
+      "y": 80.0,
+      "shape": "rectangle",
+      "rotation": 0.0,
+      "id": "PQFrTOhriRKRnWZWmSqW",
+      "h": 80.0,
+      "w": 120.0,
+      "type": "table",
+      "x": 60.0,
+      "features": [],
+      "_id": "PQFrTOhriRKRnWZWmSqW"
+    },
+    {
+      "features": [
+        "Window"
+      ],
+      "rotation": 0.0,
+      "id": "PcgiOIdyBRSPj4r7N69t",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "y": 300.0,
+      "x": 60.0,
+      "_id": "PcgiOIdyBRSPj4r7N69t"
+    },
+    {
+      "y": 300.0,
+      "rotation": 0.0,
+      "id": "Pgmf4jvh2IQwFgGYlWbY",
+      "h": 40.0,
+      "w": 40.0,
+      "features": [],
+      "x": 100.0,
+      "type": "chair",
+      "_id": "Pgmf4jvh2IQwFgGYlWbY"
+    },
+    {
+      "features": [
+        "Air Conditioner"
+      ],
+      "rotation": 0.0,
+      "id": "QTZvpONRKLM3MqchPSiX",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "y": 200.0,
+      "x": 440.0,
+      "_id": "QTZvpONRKLM3MqchPSiX"
+    },
+    {
+      "y": 200.0,
+      "rotation": 0.0,
+      "id": "XtQKXdhOyko6XUnCkbed",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 140.0,
+      "features": [],
+      "_id": "XtQKXdhOyko6XUnCkbed"
+    },
+    {
+      "y": 200.0,
+      "rotation": 0.0,
+      "id": "Zu8uZPr8suhZ0gmXfeBZ",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 100.0,
+      "features": [],
+      "_id": "Zu8uZPr8suhZ0gmXfeBZ"
+    },
+    {
+      "features": [
+        "Board",
+        "Air Conditioner"
+      ],
+      "rotation": 0.0,
+      "id": "a1XFcRd1yne5le1pccHx",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "y": 40.0,
+      "x": 340.0,
+      "_id": "a1XFcRd1yne5le1pccHx"
+    },
+    {
+      "features": [
+        "Air Conditioner"
+      ],
+      "rotation": 0.0,
+      "id": "gH8x2D6PrkQV5JPJER7S",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 60.0,
+      "y": 200.0,
+      "_id": "gH8x2D6PrkQV5JPJER7S"
+    },
+    {
+      "y": 300.0,
+      "rotation": 0.0,
+      "id": "k4qzdkFXSIWCHzsx9LXU",
+      "h": 40.0,
+      "w": 40.0,
+      "features": [],
+      "x": 340.0,
+      "type": "chair",
+      "_id": "k4qzdkFXSIWCHzsx9LXU"
+    },
+    {
+      "y": 200.0,
+      "rotation": 0.0,
+      "id": "lx4MPBKV8kVBw9glCPkX",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 340.0,
+      "features": [],
+      "_id": "lx4MPBKV8kVBw9glCPkX"
+    },
+    {
+      "features": [
+        "Board"
+      ],
+      "rotation": 0.0,
+      "id": "nYiCDs8bLfTX2AeqS67K",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 110.0,
+      "y": 40.0,
+      "_id": "nYiCDs8bLfTX2AeqS67K"
+    },
+    {
+      "x": 280.0,
+      "shape": "rectangle",
+      "rotation": 0.0,
+      "id": "tkRBBcAfzjqgvYKf7Wlm",
+      "h": 80.0,
+      "w": 120.0,
+      "features": [],
+      "y": 80.0,
+      "type": "table",
+      "_id": "tkRBBcAfzjqgvYKf7Wlm"
+    },
+    {
+      "y": 300.0,
+      "rotation": 0.0,
+      "id": "xRHaBsSl6Nk6O8rSh6Ro",
+      "h": 40.0,
+      "w": 40.0,
+      "type": "chair",
+      "x": 140.0,
+      "features": [],
+      "_id": "xRHaBsSl6Nk6O8rSh6Ro"
+    },
+    {
+      "x": 340.0,
+      "shape": "rectangle",
+      "rotation": 0.0,
+      "id": "yrUtBMLQfT7gyCwudcWx",
+      "h": 80.0,
+      "w": 120.0,
+      "type": "table",
+      "y": 240.0,
+      "features": [],
+      "_id": "yrUtBMLQfT7gyCwudcWx"
+    }
+  ]
+}

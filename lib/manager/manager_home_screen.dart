@@ -27,13 +27,13 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
   String getIconForEventType(String type) {
     switch (type) {
       case 'Classroom/Workshop':
-        return 'images/classroom.png';
+        return 'assets/classroom.png';
       case 'Family/Social Event':
-        return 'images/family_Event.png';
+        return 'assets/family_Event.png';
       case 'Conference/Professional Event':
-        return 'images/Professional_Event.png';
+        return 'assets/Professional_Event.png';
       default:
-        return 'images/Professional_Event.png';
+        return 'assets/Professional_Event.png';
     }
   }
 

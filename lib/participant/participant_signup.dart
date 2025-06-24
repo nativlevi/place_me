@@ -17,7 +17,7 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
   bool _passwordVisible = false;
@@ -29,12 +29,12 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
     }
     final String phone = phoneController.text.trim();
     final String password = passwordController.text.trim();
-    final String email = emailController.text.trim();
+    final String name = nameController.text.trim();
 
     if (phone.isEmpty ||
         password.isEmpty ||
         confirmPasswordController.text.isEmpty ||
-        email.isEmpty) {
+        name.isEmpty) {
       setState(() {
         _errorMessage = 'Please fill in all the fields.';
       });
@@ -56,20 +56,20 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
     try {
       // Convert phone to international format and pseudo email format
       String internationalPhone = convertToInternational(phone);
-      final realEmail = emailController.text.trim();
+      // final realEmail = emailController.text.trim();
 
       // Create user using Firebase Auth with pseudo email format
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: realEmail,
-        password: password,
-      );
+      // await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      //   email: realEmail,
+      //   password: password,
+      // );
 
       await FirebaseFirestore.instance
           .collection("users")
           .doc(internationalPhone)
           .set({
         'phone': internationalPhone,
-        'recoveryEmail': email,
+        'name': name,
         'password': password,
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -117,7 +117,7 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                     ),
                   ),
                   Image.asset(
-                    'images/icon.png',
+                    'assets/icon.png',
                     height: 250,
                   ),
                   Row(
@@ -174,10 +174,10 @@ class _ParticipantSignupScreenState extends State<ParticipantSignupScreen> {
                   ),
                   const SizedBox(height: 20),
                   TextFormField(
-                    controller: emailController,
+                    controller: nameController,
                     decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.email, color: Color(0xFF3D3D3D)),
-                      hintText: 'EMAIL (FOR PASSWORD RECOVERY)',
+                      prefixIcon: Icon(Icons.drive_file_rename_outline, color: Color(0xFF3D3D3D)),
+                      hintText: 'NAME',
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(

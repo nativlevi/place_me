@@ -10,8 +10,15 @@ void main() {
     app.main();
     await tester.pumpAndSettle();
 
+    // הדפסה של כל הטקסטים במסך
+    final texts = find.byType(Text);
+    for (final e in texts.evaluate()) {
+      final text = e.widget as Text;
+      print('TEXT FOUND: "${text.data}"');
+    }
+
     // 1. כניסה כאדמין
-    await tester.tap(find.text('Manager'));
+    await tester.tap(find.textContaining('Manager'));
     await tester.pumpAndSettle();
 
     expect(find.text('Welcome back'), findsOneWidget);
@@ -72,7 +79,16 @@ void main() {
     await tester.tap(submitButton);
     await tester.pumpAndSettle();
 
-    // 8. חזרה למסך הבית + בדיקה שהאירוע ברשימה
+    // וידוא שהגענו למסך סידור ישיבה
+    expect(find.text('Seating Arrangement'), findsOneWidget);
+
+    // לחץ על כפתור שמירה (אייקון דיסקט)
+    final saveIcon = find.byIcon(Icons.save);
+    expect(saveIcon, findsOneWidget, reason: 'אייקון השמירה לא נמצא');
+    await tester.tap(saveIcon);
+    await tester.pumpAndSettle();
+
+    // חזרה למסך הבית + בדיקה שהאירוע ברשימה
     expect(find.text('My Events'), findsOneWidget);
 
     // מצא את שדה החיפוש (TextField הראשון)
@@ -82,7 +98,7 @@ void main() {
 
     final allEventTexts =
         find.byWidgetPredicate((w) => w is Text && w.data == eventName);
-// נוודא שיש לפחות אחד (כלומר האירוע מופיע, גם אם הוא מופיע גם בשדה החיפוש)
+    // נוודא שיש לפחות אחד (כלומר האירוע מופיע, גם אם הוא מופיע גם בשדה החיפוש)
     expect(allEventTexts, findsAtLeastNWidgets(1),
         reason: 'האירוע לא נמצא אחרי חיפוש');
   });

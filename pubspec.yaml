@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  video_player: ^2.7.2
+  share_plus: ^7.0.0
 
 
   # Firebase dependencies
@@ -48,12 +50,12 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "images/logo.png"
+  image_path: "assets/logo.png"
 
 flutter:
   uses-material-design: true
   assets:
-    - images/
+    - assets/
     - icons/
   fonts:
     - family: DanhDa

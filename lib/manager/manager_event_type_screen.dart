@@ -58,7 +58,7 @@ class ManagerEventTypeScreen extends StatelessWidget {
                     context,
                     title: 'Classroom/Workshop',
                     description: 'Setup seating for educational events.',
-                    iconPath: 'images/classroom.png',
+                    iconPath: 'assets/classroom.png',
                     onTap: () =>
                         navigateToNextScreen(context, 'Classroom/Workshop'),
                   ),
@@ -67,7 +67,7 @@ class ManagerEventTypeScreen extends StatelessWidget {
                     title: 'Family/Social Event',
                     description:
                     'Organize seating for family or social gatherings.',
-                    iconPath: 'images/family_Event.png',
+                    iconPath: 'assets/family_Event.png',
                     onTap: () =>
                         navigateToNextScreen(context, 'Family/Social Event'),
                   ),
@@ -75,7 +75,7 @@ class ManagerEventTypeScreen extends StatelessWidget {
                     context,
                     title: 'Conference/Professional Event',
                     description: 'Plan seating for professional conferences.',
-                    iconPath: 'images/Professional_Event.png',
+                    iconPath: 'assets/Professional_Event.png',
                     onTap: () => navigateToNextScreen(context, 'Conference/Professional Event'),
 
                   ),
