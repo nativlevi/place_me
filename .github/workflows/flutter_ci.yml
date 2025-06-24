@@ -55,8 +55,8 @@ jobs:
         run: flutter build apk --debug
 
       # Save APK as an artifact
-      #- name: Upload APK
-      # uses: actions/upload-artifact@v3
-      #  with:
-      #   name: debug-apk
-      #   path: build/app/outputs/flutter-apk/app-debug.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
